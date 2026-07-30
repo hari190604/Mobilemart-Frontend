@@ -1,20 +1,30 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import './Footer.css';
 
 export const Footer = () => {
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+
+  const handleSubscribe = (e) => {
+    e.preventDefault();
+    if (newsletterEmail.trim()) {
+      alert(`Thank you for subscribing! Mock confirmation dispatched to: ${newsletterEmail}`);
+      setNewsletterEmail('');
+    }
+  };
+
   return (
     <footer className="footer-container">
       <div className="footer-grid">
         
-        {/* About MobileMart Column */}
+        {/* About Us Column */}
         <div className="footer-column">
           <Link to="/" className="footer-logo">
             <span style={{ color: 'var(--accent)', fontSize: '28px' }}>⚡</span>
             <span>Mobile<span style={{ color: 'var(--accent)' }}>Mart</span></span>
           </Link>
           <p className="footer-about-text">
-            Your premium destination for high-end smartphones, wearable tech, and essential accessories. We deliver unmatched quality, verified products, and stellar support worldwide.
+            Your premium destination for high-end smartphones, wearable tech, and premium accessories. We deliver unmatched quality, verified products, and stellar support worldwide.
           </p>
           <div className="social-icons-wrapper">
             <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="social-icon-btn" aria-label="Follow us on X/Twitter">
@@ -44,34 +54,48 @@ export const Footer = () => {
           </div>
         </div>
 
-        {/* Quick Links Column */}
+        {/* Quick Links & Categories Columns */}
         <div className="footer-column">
           <h4 className="footer-title">Quick Links</h4>
-          <div className="footer-links-list">
+          <div className="footer-links-list font-sans">
             <Link to="/" className="footer-link">Home</Link>
             <Link to="/products" className="footer-link">Products</Link>
+            <Link to="/profile" className="footer-link">My Account</Link>
+            <Link to="/orders" className="footer-link">Track Orders</Link>
+          </div>
+        </div>
+
+        <div className="footer-column font-sans">
+          <h4 className="footer-title">Categories</h4>
+          <div className="footer-links-list">
             <Link to="/products?category=Smartphones" className="footer-link">Smartphones</Link>
             <Link to="/products?category=Wearables" className="footer-link">Wearables</Link>
+            <Link to="/products?category=Accessories" className="footer-link">Accessories</Link>
             <Link to="/products?category=Tablets" className="footer-link">Tablets</Link>
           </div>
         </div>
 
-        {/* Customer Support Column */}
+        {/* Newsletter & Contact Support Column */}
         <div className="footer-column">
-          <h4 className="footer-title">Customer Support</h4>
-          <div className="footer-links-list">
-            <Link to="/orders" className="footer-link">Track Orders</Link>
-            <Link to="/profile" className="footer-link">My Account</Link>
-            <a href="#help" className="footer-link">Help & FAQs</a>
-            <a href="#returns" className="footer-link">Return Policy</a>
-            <a href="#shipping" className="footer-link">Shipping Rates</a>
-          </div>
-        </div>
+          <h4 className="footer-title">Stay Updated</h4>
+          <p className="footer-about-text" style={{ fontSize: '13px', marginBottom: '4px' }}>
+            Subscribe to our newsletter for exclusive mobile tech deals and launch updates.
+          </p>
+          
+          <form className="newsletter-form font-sans" onSubmit={handleSubscribe}>
+            <input 
+              type="email" 
+              className="newsletter-input" 
+              placeholder="Enter your email..." 
+              required 
+              value={newsletterEmail}
+              onChange={(e) => setNewsletterEmail(e.target.value)}
+            />
+            <button type="submit" className="newsletter-btn">Subscribe</button>
+          </form>
 
-        {/* Contact Information Column */}
-        <div className="footer-column">
-          <h4 className="footer-title">Contact Us</h4>
-          <div className="footer-links-list">
+          <h4 className="footer-title" style={{ marginTop: '16px', fontSize: '14px' }}>Contact Support</h4>
+          <div className="footer-links-list font-sans">
             <div className="footer-contact-item">
               <svg className="footer-contact-icon" viewBox="0 0 24 24">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
@@ -85,13 +109,6 @@ export const Footer = () => {
               </svg>
               <span>+1 (800) 555-MOBI</span>
             </div>
-            <div className="footer-contact-item">
-              <svg className="footer-contact-icon" viewBox="0 0 24 24">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                <circle cx="12" cy="10" r="3"></circle>
-              </svg>
-              <span>32 Tech Plaza, Silicon Drive, NY 10001</span>
-            </div>
           </div>
         </div>
 
@@ -99,8 +116,8 @@ export const Footer = () => {
 
       <hr className="footer-divider" />
 
-      {/* Footer Bottom copyright & payment methods */}
-      <div className="footer-bottom">
+      {/* Footer Bottom copyright & legal links */}
+      <div className="footer-bottom font-sans">
         <p>© 2026 MobileMart E-Commerce. All rights reserved.</p>
         
         <div className="payment-gateways">
@@ -112,7 +129,7 @@ export const Footer = () => {
 
         <div className="footer-bottom-links">
           <a href="#privacy" className="footer-bottom-link">Privacy Policy</a>
-          <a href="#terms" className="footer-bottom-link">Terms of Service</a>
+          <a href="#terms" className="footer-bottom-link">Terms & Conditions</a>
         </div>
       </div>
     </footer>
