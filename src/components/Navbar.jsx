@@ -11,6 +11,7 @@ export const Navbar = () => {
   const [theme, setTheme] = useState('light');
   const [scrolled, setScrolled] = useState(false);
   const [searchVal, setSearchVal] = useState('');
+  const [wishlistCount, setWishlistCount] = useState(2); // Mock initial wishlist items count
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -73,7 +74,7 @@ export const Navbar = () => {
           </Link>
 
           {/* Desktop Navigation Links */}
-          <nav className="navbar-menu">
+          <nav className="navbar-menu font-sans">
             <Link 
               to="/" 
               className={`navbar-link ${location.pathname === '/' ? 'active' : ''}`}
@@ -109,8 +110,8 @@ export const Navbar = () => {
             </div>
           </nav>
 
-          {/* Expandable Search Input Placeholder */}
-          <form onSubmit={handleSearchSubmit} className="search-container">
+          {/* Search Input Bar */}
+          <form onSubmit={handleSearchSubmit} className="search-container font-sans">
             <button type="submit" className="search-icon-btn" aria-label="Search">
               <svg className="search-icon-svg" viewBox="0 0 24 24">
                 <circle cx="11" cy="11" r="8"></circle>
@@ -155,6 +156,14 @@ export const Navbar = () => {
               )}
             </button>
 
+            {/* Wishlist Header Icon */}
+            <Link to="/wishlist" className="action-btn" title="View Wishlist" aria-label="Wishlist">
+              <svg className="action-icon-svg" viewBox="0 0 24 24">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+              </svg>
+              {wishlistCount > 0 && <span className="action-badge">{wishlistCount}</span>}
+            </Link>
+
             {/* Shopping Cart Trigger */}
             <Link to="/cart" className="action-btn" title="View Shopping Cart" aria-label="Cart">
               <svg className="action-icon-svg" viewBox="0 0 24 24">
@@ -165,21 +174,44 @@ export const Navbar = () => {
               {cartCount > 0 && <span className="action-badge">{cartCount}</span>}
             </Link>
 
-            {/* Authentication Buttons Section */}
+            {/* Session Controls & user profile dropdown */}
             <div style={{ display: 'none', display: 'flex' } && window.innerWidth < 900 ? { display: 'none' } : { display: 'flex' }}>
               {user ? (
-                <div className="auth-group">
-                  {isAdmin() && (
-                    <Link to="/admin" className="navbar-link" style={{ color: 'var(--accent)', marginRight: '8px', fontWeight: '600' }}>
-                      🛠️ Admin
+                /* User profile dropdown placeholder */
+                <div className="nav-dropdown">
+                  <span className="user-profile-trigger font-sans">
+                    👤 {user.name.split(' ')[0]} <span className="dropdown-icon" style={{ marginLeft: '4px' }}>▼</span>
+                  </span>
+                  <div className="dropdown-menu" style={{ right: 0, left: 'auto', width: '180px' }}>
+                    <Link to="/profile" className="dropdown-item">
+                      <span className="dropdown-item-icon">👤</span> Profile
                     </Link>
-                  )}
-                  <Link to="/profile" className="user-profile-trigger" title="User Profile">
-                    👤 {user.name.split(' ')[0]}
-                  </Link>
-                  <button onClick={handleLogout} className="btn btn-secondary btn-sm" style={{ padding: '6px 14px' }}>
-                    Logout
-                  </button>
+                    {!isAdmin() && (
+                      <Link to="/orders" className="dropdown-item">
+                        <span className="dropdown-item-icon">📦</span> My Orders
+                      </Link>
+                    )}
+                    {isAdmin() && (
+                      <Link to="/admin" className="dropdown-item" style={{ color: 'var(--accent)', fontWeight: '600' }}>
+                        <span className="dropdown-item-icon">🛠️</span> Admin Panel
+                      </Link>
+                    )}
+                    <hr style={{ border: 0, borderTop: '1px solid var(--border)', margin: '4px 0' }} />
+                    <button 
+                      onClick={handleLogout} 
+                      className="dropdown-item" 
+                      style={{ 
+                        width: '100%', 
+                        border: 'none', 
+                        background: 'transparent', 
+                        textAlign: 'left', 
+                        cursor: 'pointer',
+                        padding: '10px 14px'
+                      }}
+                    >
+                      <span className="dropdown-item-icon" style={{ color: 'var(--danger)' }}>🚪</span> Logout
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="auth-group">
@@ -214,7 +246,7 @@ export const Navbar = () => {
         onClick={() => setMobileMenuOpen(false)}
       ></div>
 
-      {/* Mobile Drawer navigation panel slider */}
+      {/* Mobile Drawer Navigation Panel */}
       <nav className={`mobile-nav-panel ${mobileMenuOpen ? 'open' : ''}`}>
         <div className="mobile-menu-links">
           
@@ -238,6 +270,13 @@ export const Navbar = () => {
             </div>
           </div>
 
+          <Link to="/wishlist" className="mobile-link">
+            <span>Wishlist</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              ❤️ {wishlistCount > 0 && <span style={{ background: 'var(--accent)', color: '#0f172a', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: '800' }}>{wishlistCount}</span>}
+            </span>
+          </Link>
+
           <Link to="/cart" className="mobile-link">
             <span>Shopping Cart</span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -246,7 +285,7 @@ export const Navbar = () => {
           </Link>
         </div>
 
-        {/* Mobile Search Input */}
+        {/* Mobile Search input */}
         <form onSubmit={handleSearchSubmit} className="search-container" style={{ width: '100%', display: 'flex', margin: '16px 0 0' }}>
           <button type="submit" className="search-icon-btn" aria-label="Search">
             <svg className="search-icon-svg" viewBox="0 0 24 24">
@@ -263,7 +302,7 @@ export const Navbar = () => {
           />
         </form>
 
-        {/* Mobile Account Details */}
+        {/* Mobile Accounts detail */}
         <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {user ? (
             <>
@@ -273,6 +312,11 @@ export const Navbar = () => {
               {isAdmin() && (
                 <Link to="/admin" className="btn btn-secondary" style={{ width: '100%', padding: '12px' }}>
                   🛠️ Admin Panel
+                </Link>
+              )}
+              {!isAdmin() && (
+                <Link to="/orders" className="btn btn-secondary" style={{ width: '100%', padding: '12px' }}>
+                  📦 My Orders
                 </Link>
               )}
               <button onClick={handleLogout} className="btn btn-danger" style={{ width: '100%', padding: '12px' }}>
