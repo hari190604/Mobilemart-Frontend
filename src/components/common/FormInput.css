@@ -1,0 +1,123 @@
+/* FormInput wrapper layout */
+.form-input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  margin-bottom: 18px;
+  position: relative;
+  text-align: left;
+}
+
+.form-input-label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-main);
+  transition: color 0.2s ease;
+}
+
+.input-field-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+/* Icon layout inside field */
+.input-left-icon {
+  position: absolute;
+  left: 14px;
+  width: 18px;
+  height: 18px;
+  stroke: var(--text-muted);
+  stroke-width: 2;
+  fill: none;
+  pointer-events: none;
+  transition: stroke 0.3s ease;
+}
+
+.input-control {
+  width: 100%;
+  padding: 12px 14px 12px 42px; /* Pad left for left icon */
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background-color: var(--bg-input);
+  color: var(--text-main);
+  font-size: 14px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.input-control::placeholder {
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+/* Password reveal button coordinates */
+.input-right-btn {
+  position: absolute;
+  right: 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: color 0.2s ease;
+  border-radius: 50%;
+}
+
+.input-right-btn:hover {
+  color: var(--text-main);
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme='dark'] .input-right-btn:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* Focus and validation states styling */
+.input-control:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15);
+  background-color: var(--bg-card);
+}
+
+.input-field-wrapper:focus-within .input-left-icon {
+  stroke: var(--accent);
+}
+
+/* Error validation styling */
+.form-input-container.has-error .input-control {
+  border-color: var(--danger);
+}
+
+.form-input-container.has-error .input-control:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+.form-input-container.has-error .input-left-icon {
+  stroke: var(--danger) !important;
+}
+
+.form-input-error-msg {
+  font-size: 12px;
+  color: var(--danger);
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  animation: errorSlideIn 0.2s ease-out;
+}
+
+@keyframes errorSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
