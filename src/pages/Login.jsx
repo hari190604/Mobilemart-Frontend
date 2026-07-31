@@ -210,48 +210,6 @@ export const Login = () => {
           </button>
         </form>
 
-        {/* Divider */}
-        <div className="or-divider font-sans">OR</div>
-
-        {/* Continue with Google SSO UI Button */}
-        <button 
-          type="button" 
-          onClick={handleGoogleLogin} 
-          className="social-google-btn font-sans"
-        >
-          <svg className="google-brand-svg" viewBox="0 0 24 24">
-            <path
-              fill="#EA4335"
-              d="M12 5.04c1.62 0 3.06.56 4.2 1.64l3.15-3.15C17.43 1.83 14.9 1 12 1 7.35 1 3.4 3.65 1.5 7.5l3.6 2.8c.84-2.54 3.22-4.26 6.9-4.26z"
-            />
-            <path
-              fill="#4285F4"
-              d="M23.49 12.27c0-.81-.07-1.59-.2-2.34H12v4.43h6.48c-.28 1.48-1.12 2.74-2.38 3.59l3.6 2.8c2.1-1.94 3.79-5.18 3.79-8.48z"
-            />
-            <path
-              fill="#FBBC05"
-              d="M5.1 14.8c-.23-.69-.36-1.42-.36-2.18s.13-1.49.36-2.18L1.5 7.64C.54 9.54 0 11.71 0 14s.54 4.46 1.5 6.36l3.6-2.8z"
-            />
-            <path
-              fill="#34A853"
-              d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.6-2.8c-1.1.74-2.5 1.18-4.36 1.18-3.68 0-6.06-1.72-6.9-4.26l-3.6 2.8C3.4 20.35 7.35 23 12 23z"
-            />
-          </svg>
-          Continue with Google
-        </button>
-
-        {/* Testing instructions helper card */}
-        <div className="login-guide-card font-sans">
-          <div className="login-guide-title">
-            <span>💡</span> <strong>Mock Dev Testing Guide</strong>
-          </div>
-          <div className="login-guide-row">
-            <div>👤 <strong>Customer:</strong> <code>customer@mobilemart.com</code></div>
-            <div>🛠️ <strong>Admin Manager:</strong> <code>admin@mobilemart.com</code></div>
-            <div style={{ color: 'var(--text-muted)', marginTop: '4px' }}>Password: <code>123456</code> (or any 6+ chars)</div>
-          </div>
-        </div>
-
         {/* Link to register page */}
         <p className="text-muted text-sm font-sans" style={{ marginTop: '24px' }}>
           Don't have an account? <Link to="/register" style={{ color: 'var(--accent)', fontWeight: '600' }}>Register Now</Link>

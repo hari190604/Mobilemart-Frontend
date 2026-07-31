@@ -13,8 +13,7 @@ export const Register = () => {
     email: '',
     phoneNumber: '',
     password: '',
-    confirmPassword: '',
-    acceptTerms: false
+    confirmPassword: ''
   });
 
   const [errors, setErrors] = useState({});
@@ -69,12 +68,6 @@ export const Register = () => {
         errorMsg = 'Passwords do not match.';
       }
     } 
-    
-    else if (name === 'acceptTerms') {
-      if (!value) {
-        errorMsg = 'You must accept the Terms & Conditions to proceed.';
-      }
-    }
     
     return errorMsg;
   };
@@ -246,27 +239,6 @@ export const Register = () => {
             required
             disabled={loading}
           />
-
-          {/* Accept Terms & Conditions */}
-          <div className="terms-checkbox-wrapper">
-            <label className="terms-label-container">
-              <input
-                type="checkbox"
-                name="acceptTerms"
-                className="terms-checkbox-input"
-                checked={formData.acceptTerms}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                disabled={loading}
-              />
-              <span>
-                I agree to the MobileMart <Link to="/terms" style={{ color: 'var(--accent)', fontWeight: 600 }}>Terms & Conditions</Link> and <Link to="/privacy" style={{ color: 'var(--accent)', fontWeight: 600 }}>Privacy Policy</Link>
-              </span>
-            </label>
-            {errors.acceptTerms && (
-              <span className="terms-error-text">⚠️ {errors.acceptTerms}</span>
-            )}
-          </div>
 
           {/* Submit register */}
           <button

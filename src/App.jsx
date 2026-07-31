@@ -31,75 +31,47 @@ function App() {
       <CartProvider>
         <BrowserRouter>
           <Routes>
-            {/* Main Application Routes */}
-            <Route path="/" element={<RootLayout />}>
+            {/* Guest Pages (Outside RootLayout, so no Navbar, Footer or layout wrapper is rendered) */}
+            <Route 
+              path="/login" 
+              element={
+                <GuestRoute>
+                  <Login />
+                </GuestRoute>
+              } 
+            />
+            <Route 
+              path="/register" 
+              element={
+                <GuestRoute>
+                  <Register />
+                </GuestRoute>
+              } 
+            />
+            <Route 
+              path="/verify-otp" 
+              element={
+                <GuestRoute>
+                  <VerifyOtp />
+                </GuestRoute>
+              } 
+            />
+
+            {/* Authenticated Shopping Views (Includes Navbar & Footer, protected by general auth) */}
+            <Route 
+              path="/" 
+              element={
+                <ProtectedRoute>
+                  <RootLayout />
+                </ProtectedRoute>
+              }
+            >
               {/* Authenticated Customer Pages */}
-              <Route 
-                index 
-                element={
-                  <ProtectedRoute>
-                    <Home />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="products" 
-                element={
-                  <ProtectedRoute>
-                    <Products />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="products/:id" 
-                element={
-                  <ProtectedRoute>
-                    <ProductDetails />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="cart" 
-                element={
-                  <ProtectedRoute>
-                    <Cart />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="wishlist" 
-                element={
-                  <ProtectedRoute>
-                    <Wishlist />
-                  </ProtectedRoute>
-                } 
-              />
-              
-              {/* Authenticated Guest Views */}
-              <Route 
-                path="login" 
-                element={
-                  <GuestRoute>
-                    <Login />
-                  </GuestRoute>
-                } 
-              />
-              <Route 
-                path="register" 
-                element={
-                  <GuestRoute>
-                    <Register />
-                  </GuestRoute>
-                } 
-              />
-              <Route 
-                path="verify-otp" 
-                element={
-                  <GuestRoute>
-                    <VerifyOtp />
-                  </GuestRoute>
-                } 
-              />
+              <Route index element={<Home />} />
+              <Route path="products" element={<Products />} />
+              <Route path="products/:id" element={<ProductDetails />} />
+              <Route path="cart" element={<Cart />} />
+              <Route path="wishlist" element={<Wishlist />} />
 
               {/* Customer Accounts Guard - Requires Customer/Admin */}
               <Route 
@@ -144,10 +116,10 @@ function App() {
                   </ProtectedRoute>
                 } 
               />
-
-              {/* Wildcard redirects back to home */}
-              <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
+
+            {/* Wildcard redirects back to home */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
       </CartProvider>
