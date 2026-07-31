@@ -3,7 +3,15 @@ import { Link } from 'react-router-dom';
 import './ProductCard.css';
 
 export const ProductCard = ({ product, onAddToCart }) => {
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [isWishlisted, setIsWishlisted] = React.useState(() => {
+    try {
+      const saved = localStorage.getItem('mobilemart_wishlist');
+      const wishlist = saved ? JSON.parse(saved) : [];
+      return wishlist.includes(product.id);
+    } catch {
+      return false;
+    }
+  });
 
   if (!product) return null;
 
@@ -11,10 +19,43 @@ export const ProductCard = ({ product, onAddToCart }) => {
   const originalPrice = product.price * 1.15;
   const discountPercentage = 15;
 
+  // Listen to changes from other cards/pages for the same product id
+  React.useEffect(() => {
+    const syncWishlistState = () => {
+      try {
+        const saved = localStorage.getItem('mobilemart_wishlist');
+        const wishlist = saved ? JSON.parse(saved) : [];
+        setIsWishlisted(wishlist.includes(product.id));
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    window.addEventListener('wishlist-updated', syncWishlistState);
+    return () => window.removeEventListener('wishlist-updated', syncWishlistState);
+  }, [product.id]);
+
   const handleWishlistToggle = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsWishlisted(!isWishlisted);
+    setIsWishlisted((prev) => {
+      const next = !prev;
+      try {
+        const saved = localStorage.getItem('mobilemart_wishlist');
+        let wishlist = saved ? JSON.parse(saved) : [];
+        if (next) {
+          if (!wishlist.includes(product.id)) {
+            wishlist.push(product.id);
+          }
+        } else {
+          wishlist = wishlist.filter((id) => id !== product.id);
+        }
+        localStorage.setItem('mobilemart_wishlist', JSON.stringify(wishlist));
+        window.dispatchEvent(new Event('wishlist-updated'));
+      } catch (err) {
+        console.error('Error saving wishlist state:', err);
+      }
+      return next;
+    });
   };
 
   const handleAddClick = (e) => {

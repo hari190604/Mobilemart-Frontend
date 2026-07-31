@@ -136,11 +136,11 @@ export const Register = () => {
     try {
       setLoading(true);
       await register(formData.email, formData.password, firstName, lastName, formData.phoneNumber);
-      setSuccessAlert('Account created successfully! An activation code (OTP) was dispatched.');
+      setSuccessAlert('Account created successfully! Redirecting to login page...');
       
       // Delay navigation to let the user review confirmation
       setTimeout(() => {
-        navigate(`/verify-otp?email=${encodeURIComponent(formData.email)}`);
+        navigate('/login');
       }, 1800);
     } catch (err) {
       setErrorAlert(err.message || 'Registration failed. Please check credentials or network.');

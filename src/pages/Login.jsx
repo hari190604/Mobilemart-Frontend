@@ -101,12 +101,8 @@ export const Login = () => {
         localStorage.setItem('mobilemart_remember_me', 'false');
       }
 
-      // Check role redirection
-      if (authenticatedUser.role === 'ROLE_ADMIN') {
-        navigate('/admin');
-      } else {
-        navigate('/');
-      }
+      // Redirect to Home page after successful login
+      navigate('/');
     } catch (err) {
       setBackendError(err.message || 'Login failed. Please verify credentials.');
     } finally {
