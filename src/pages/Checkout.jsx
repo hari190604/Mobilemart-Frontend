@@ -3,18 +3,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 
-/**
- * TODO: FRONTEND DEVELOPER 2 - Checkout & Billing Integration
- * 
- * 1. Interface with backend order creation API: `POST /api/v1/orders`.
- * 2. Send transaction payload containing:
- *    - shippingAddress: { street, city, state, zipCode, country, addressType }
- *    - billingAddress: same or separate
- *    - paymentMethod: CARD / UPI / COD
- *    - orderItems: mapped list of items and quantities from state
- * 3. Validate user authentication token headers: Ensure auth Bearer intercepts are utilized.
- * 4. Coordinate transition states: Redirect directly to /payment for Credit Card charges.
- */
 export const Checkout = () => {
   const { cartItems, cartTotal, clearCart } = useCart();
   const { user } = useAuth();
@@ -32,17 +20,9 @@ export const Checkout = () => {
 
   // Payment params
   const [paymentMethod, setPaymentMethod] = useState('CARD');
-  const [cardDetails, setCardDetails] = useState({
-    number: '4111 2222 3333 4444',
-    name: user ? user.name : 'John Customer',
-    expiry: '12/28',
-    cvv: '123'
-  });
-
   const [loading, setLoading] = useState(false);
-  const [orderResult, setOrderResult] = useState(null);
 
-  if (cartItems.length === 0 && !orderResult) {
+  if (cartItems.length === 0) {
     return (
       <div className="card text-center animate-fade-in" style={{ padding: '60px', marginTop: '40px' }}>
         <span style={{ fontSize: '64px' }}>🛒</span>
@@ -62,63 +42,41 @@ export const Checkout = () => {
     e.preventDefault();
     setLoading(true);
 
-    // Simulate database write
+    const generatedOrderId = 'MM-' + Math.floor(100000 + Math.random() * 900000);
+    const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    const orderPayload = {
+      orderId: generatedOrderId,
+      date: dateStr,
+      items: [...cartItems],
+      total: grandTotal,
+      shippingAddress: { ...address },
+      paymentMethod: paymentMethod,
+    };
+
     setTimeout(() => {
-      const generatedOrderId = 'MM-' + Math.floor(100000 + Math.random() * 900000);
-      const transactionId = 'TXN_MM' + Math.random().toString(36).substring(2, 9).toUpperCase();
-      
-      const newOrder = {
-        orderId: generatedOrderId,
-        transactionId: transactionId,
-        date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-        items: [...cartItems],
-        total: grandTotal,
-        shippingAddress: { ...address },
-        paymentMethod: paymentMethod,
-        status: 'PAID'
-      };
+      if (paymentMethod === 'COD') {
+        // Cash on delivery - complete immediately
+        const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+        const finalOrder = {
+          ...orderPayload,
+          transactionId: 'COD_MM' + Math.random().toString(36).substring(2, 9).toUpperCase(),
+          status: 'PAID' // Mark as paid for local tracking
+        };
+        existingOrders.push(finalOrder);
+        localStorage.setItem('orders', JSON.stringify(existingOrders));
 
-      // Push to orders list in localStorage
-      const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-      existingOrders.push(newOrder);
-      localStorage.setItem('orders', JSON.stringify(existingOrders));
-
-      // Resolve state
-      clearCart();
-      setOrderResult(newOrder);
-      setLoading(false);
-    }, 1200);
+        clearCart();
+        setLoading(false);
+        navigate('/order-success', { state: { order: finalOrder } });
+      } else {
+        // Card or UPI - store as pending_order and go to /payment
+        localStorage.setItem('pending_order', JSON.stringify(orderPayload));
+        setLoading(false);
+        navigate('/payment');
+      }
+    }, 1000);
   };
-
-  if (orderResult) {
-    return (
-      <div className="card text-center animate-fade-in" style={{ padding: '60px', maxWidth: '640px', margin: '40px auto', textAlign: 'center' }}>
-        <div style={{ fontSize: '64px' }}>🎉</div>
-        <h2 style={{ fontSize: '28px', color: 'var(--success)', margin: '16px 0 12px 0' }}>Order Placed Successfully!</h2>
-        <p className="text-muted" style={{ marginBottom: '24px' }}>
-          Thank you for choosing MobileMart. We have processed your order successfully.
-        </p>
-
-        {/* Order Details Voucher */}
-        <div className="card" style={{ textAlign: 'left', backgroundColor: 'var(--bg-main)', border: '1px solid var(--border)', marginBottom: '24px', boxShadow: 'none' }}>
-          <div style={{ padding: '4px 0', fontSize: '15px' }}>🧾 <strong>Order Reference:</strong> <span style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{orderResult.orderId}</span></div>
-          <div style={{ padding: '4px 0', fontSize: '15px' }}>🗝️ <strong>Transaction ID:</strong> <span style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{orderResult.transactionId}</span></div>
-          <div style={{ padding: '4px 0', fontSize: '15px' }}>📅 <strong>Order Date:</strong> {orderResult.date}</div>
-          <div style={{ padding: '4px 0', fontSize: '15px' }}>💰 <strong>Total Settled:</strong> ${orderResult.total.toFixed(2)}</div>
-          <div style={{ padding: '4px 0', fontSize: '15px' }}>📍 <strong>Ship to:</strong> {orderResult.shippingAddress.street}, {orderResult.shippingAddress.city}</div>
-        </div>
-
-        <div className="flex gap-2 justify-center">
-          <Link to="/orders" className="btn btn-primary">
-            Track My Orders 📦
-          </Link>
-          <Link to="/products" className="btn btn-secondary">
-            Back to Mobile Catalog
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '30px', textAlign: 'left' }}>
@@ -225,64 +183,20 @@ export const Checkout = () => {
             </div>
 
             {paymentMethod === 'CARD' && (
-              <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div className="form-group">
-                  <label className="form-label">Card Number</label>
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    value={cardDetails.number}
-                    onChange={(e) => setCardDetails({...cardDetails, number: e.target.value})}
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Name on Card</label>
-                  <input 
-                    type="text" 
-                    className="form-input" 
-                    value={cardDetails.name}
-                    onChange={(e) => setCardDetails({...cardDetails, name: e.target.value})}
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-1" style={{ marginBottom: '0px' }}>
-                  <div className="form-group">
-                    <label className="form-label">Expiry Date</label>
-                    <input 
-                      type="text" 
-                      className="form-input" 
-                      placeholder="MM/YY"
-                      value={cardDetails.expiry}
-                      onChange={(e) => setCardDetails({...cardDetails, expiry: e.target.value})}
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">CVV</label>
-                    <input 
-                      type="password" 
-                      className="form-input" 
-                      placeholder="•••"
-                      maxLength="3"
-                      value={cardDetails.cvv}
-                      onChange={(e) => setCardDetails({...cardDetails, cvv: e.target.value})}
-                      required
-                    />
-                  </div>
-                </div>
+              <div className="card text-center animate-fade-in" style={{ padding: '20px', backgroundColor: 'var(--bg-main)', border: 'none', boxShadow: 'none' }}>
+                💳 You will be redirected to our secure payment gateway to input your card details and complete the transaction.
               </div>
             )}
 
             {paymentMethod === 'UPI' && (
               <div className="card text-center animate-fade-in" style={{ padding: '20px', backgroundColor: 'var(--bg-main)', border: 'none', boxShadow: 'none' }}>
-                📲 Enter your Virtual Payment Address (e.g. name@upi) on checkout to receive a push notification for checkout processing.
+                📱 You will be redirected to our online terminal to process your payment using UPI QR code or VPA ID verification.
               </div>
             )}
 
             {paymentMethod === 'COD' && (
               <div className="card text-center animate-fade-in" style={{ padding: '20px', backgroundColor: 'var(--bg-main)', border: 'none', boxShadow: 'none' }}>
-                💵 Deliver fees and device amounts directly to our dispatch rider on arrival.
+                💵 Deliver fees and device amounts directly to our dispatch rider on arrival. No pre-payment is required!
               </div>
             )}
 
@@ -334,7 +248,7 @@ export const Checkout = () => {
               style={{ width: '100%', padding: '14px', fontSize: '16px' }}
               disabled={loading}
             >
-              {loading ? 'Processing Order...' : 'Confirm Order Payment 💳'}
+              {loading ? 'Processing Checkout...' : paymentMethod === 'COD' ? 'Place Order (COD) 💵' : 'Proceed to Payment 💳'}
             </button>
           </div>
         </div>
@@ -343,4 +257,5 @@ export const Checkout = () => {
     </div>
   );
 };
+
 export default Checkout;
