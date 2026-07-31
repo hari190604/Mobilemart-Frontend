@@ -19,6 +19,10 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import VerifyOtp from './pages/VerifyOtp';
 import Payment from './pages/Payment';
+import OrderSuccess from './pages/OrderSuccess';
+import OrderDetails from './pages/OrderDetails';
+import PaymentSuccess from './pages/PaymentSuccess';
+import PaymentFailed from './pages/PaymentFailed';
 import Wishlist from './pages/Wishlist';
 
 // Route Guards imports
@@ -103,6 +107,38 @@ function App() {
                 element={
                   <ProtectedRoute allowedRoles={['ROLE_CUSTOMER', 'ROLE_ADMIN']}>
                     <Profile />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="order-success" 
+                element={
+                  <ProtectedRoute allowedRoles={['ROLE_CUSTOMER', 'ROLE_ADMIN']}>
+                    <OrderSuccess />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="orders/:id" 
+                element={
+                  <ProtectedRoute allowedRoles={['ROLE_CUSTOMER', 'ROLE_ADMIN']}>
+                    <OrderDetails />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="payment-success" 
+                element={
+                  <ProtectedRoute allowedRoles={['ROLE_CUSTOMER', 'ROLE_ADMIN']}>
+                    <PaymentSuccess />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="payment-failed" 
+                element={
+                  <ProtectedRoute allowedRoles={['ROLE_CUSTOMER', 'ROLE_ADMIN']}>
+                    <PaymentFailed />
                   </ProtectedRoute>
                 } 
               />
