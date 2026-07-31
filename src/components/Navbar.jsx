@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
+import { Search } from './common/Search/Search';
 import './Navbar.css';
 
 export const Navbar = () => {
@@ -10,7 +11,6 @@ export const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [theme, setTheme] = useState('light');
   const [scrolled, setScrolled] = useState(false);
-  const [searchVal, setSearchVal] = useState('');
   const [wishlistCount, setWishlistCount] = useState(2); // Mock initial wishlist items count
   const navigate = useNavigate();
   const location = useLocation();
@@ -53,14 +53,7 @@ export const Navbar = () => {
     setMobileMenuOpen(false);
   };
 
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    if (searchVal.trim()) {
-      navigate(`/products?search=${encodeURIComponent(searchVal.trim())}`);
-    } else {
-      navigate('/products');
-    }
-  };
+  // Search submission is handled internally by the Search component
 
   return (
     <>
@@ -111,21 +104,7 @@ export const Navbar = () => {
           </nav>
 
           {/* Search Input Bar */}
-          <form onSubmit={handleSearchSubmit} className="search-container font-sans">
-            <button type="submit" className="search-icon-btn" aria-label="Search">
-              <svg className="search-icon-svg" viewBox="0 0 24 24">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-            </button>
-            <input 
-              type="text" 
-              className="search-input" 
-              placeholder="Search catalog..." 
-              value={searchVal}
-              onChange={(e) => setSearchVal(e.target.value)}
-            />
-          </form>
+          <Search />
 
           {/* Actions & Session controls */}
           <div className="navbar-actions">
@@ -286,21 +265,9 @@ export const Navbar = () => {
         </div>
 
         {/* Mobile Search input */}
-        <form onSubmit={handleSearchSubmit} className="search-container" style={{ width: '100%', display: 'flex', margin: '16px 0 0' }}>
-          <button type="submit" className="search-icon-btn" aria-label="Search">
-            <svg className="search-icon-svg" viewBox="0 0 24 24">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-          </button>
-          <input 
-            type="text" 
-            className="search-input" 
-            placeholder="Search catalog..." 
-            value={searchVal}
-            onChange={(e) => setSearchVal(e.target.value)}
-          />
-        </form>
+        <div style={{ margin: '16px 0 0', width: '100%' }}>
+          <Search placeholder="Search catalog..." onSearchSubmit={() => setMobileMenuOpen(false)} />
+        </div>
 
         {/* Mobile Accounts detail */}
         <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
