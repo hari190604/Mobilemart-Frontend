@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 
 /**
  * TODO: FRONTEND DEVELOPER 2 - Order History & Tracking Integration
@@ -11,7 +10,6 @@ import { useAuth } from '../contexts/AuthContext';
  * 4. Implement search filters to isolate orders by date ranges or completion states.
  */
 export const Orders = () => {
-  const { user } = useAuth();
   const [orders, setOrders] = useState([]);
 
   // Fetch orders from localStorage on load

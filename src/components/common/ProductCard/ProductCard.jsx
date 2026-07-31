@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './ProductCard.css';
 
 export const ProductCard = ({ product, onAddToCart }) => {
-  const [isWishlisted, setIsWishlisted] = React.useState(() => {
+  const [isWishlisted, setIsWishlisted] = useState(() => {
+    if (!product) return false;
     try {
       const saved = localStorage.getItem('mobilemart_wishlist');
       const wishlist = saved ? JSON.parse(saved) : [];
@@ -13,26 +14,29 @@ export const ProductCard = ({ product, onAddToCart }) => {
     }
   });
 
-  if (!product) return null;
-
-  // Calculate simulated 15% discount pricing
-  const originalPrice = product.price * 1.15;
-  const discountPercentage = 15;
+  const productId = product?.id;
 
   // Listen to changes from other cards/pages for the same product id
-  React.useEffect(() => {
+  useEffect(() => {
+    if (!productId) return;
     const syncWishlistState = () => {
       try {
         const saved = localStorage.getItem('mobilemart_wishlist');
         const wishlist = saved ? JSON.parse(saved) : [];
-        setIsWishlisted(wishlist.includes(product.id));
+        setIsWishlisted(wishlist.includes(productId));
       } catch (err) {
         console.error(err);
       }
     };
     window.addEventListener('wishlist-updated', syncWishlistState);
     return () => window.removeEventListener('wishlist-updated', syncWishlistState);
-  }, [product.id]);
+  }, [productId]);
+
+  if (!product) return null;
+
+  // Calculate simulated 15% discount pricing
+  const originalPrice = product.price * 1.15;
+  const discountPercentage = 15;
 
   const handleWishlistToggle = (e) => {
     e.preventDefault();

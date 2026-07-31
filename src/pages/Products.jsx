@@ -9,6 +9,16 @@ export const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { addToCart } = useCart();
 
+  // Load products list from localStorage (synced with admin dashboard additions/deletions)
+  const [productsList] = useState(() => {
+    try {
+      const saved = localStorage.getItem('products');
+      return saved ? JSON.parse(saved) : mockProducts;
+    } catch {
+      return mockProducts;
+    }
+  });
+
   // Retrieve route search filters
   const categoryParam = searchParams.get('category') || 'All';
   const brandParam = searchParams.get('brand') || 'All';
@@ -37,8 +47,8 @@ export const Products = () => {
   }, [selectedCategory, selectedBrand, searchQuery, sortBy]);
 
   // Extract unique categories and brands for sidebar selection filters
-  const categories = ['All', ...new Set(mockProducts.map((p) => p.category))];
-  const brands = ['All', ...new Set(mockProducts.map((p) => p.brand))];
+  const categories = ['All', ...new Set(productsList.map((p) => p.category))];
+  const brands = ['All', ...new Set(productsList.map((p) => p.brand))];
 
   const applyFilters = (cat = selectedCategory, brand = selectedBrand, search = searchQuery) => {
     const params = {};
@@ -72,7 +82,7 @@ export const Products = () => {
   };
 
   // Filter products collection
-  const filteredProducts = mockProducts.filter((product) => {
+  const filteredProducts = productsList.filter((product) => {
     const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
     const matchesBrand = selectedBrand === 'All' || product.brand === selectedBrand;
     const matchesSearch = 

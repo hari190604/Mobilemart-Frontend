@@ -177,7 +177,7 @@ export const Navbar = () => {
             </Link>
 
             {/* Session Controls & user profile dropdown */}
-            <div style={{ display: 'none', display: 'flex' } && window.innerWidth < 900 ? { display: 'none' } : { display: 'flex' }}>
+            <div className="desktop-only-controls">
               {user ? (
                 /* User profile dropdown placeholder */
                 <div className="nav-dropdown">

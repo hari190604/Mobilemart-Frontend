@@ -23,8 +23,18 @@ export const ProductDetails = () => {
   });
   const [wishlistToast, setWishlistToast] = useState('');
 
+  // Load products list from localStorage
+  const [productsList] = useState(() => {
+    try {
+      const saved = localStorage.getItem('products');
+      return saved ? JSON.parse(saved) : mockProducts;
+    } catch {
+      return mockProducts;
+    }
+  });
+
   // Retrieve the requested product
-  const product = mockProducts.find((p) => p.id === parseInt(id));
+  const product = productsList.find((p) => p.id === parseInt(id));
 
   // Reset states and scroll to top when product ID transitions
   useEffect(() => {

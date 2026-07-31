@@ -90,7 +90,7 @@ export const Login = () => {
 
     try {
       setLoading(true);
-      const authenticatedUser = await login(email, password);
+      await login(email, password);
 
       // Handle "Remember Me" persistence
       if (rememberMe) {
@@ -116,10 +116,6 @@ export const Login = () => {
     alert('Mock Action: Refresher reset link has been mock-dispatched to: ' + (email || 'your email'));
   };
 
-  const handleGoogleLogin = (e) => {
-    e.preventDefault();
-    alert('Mock Action: Google OAuth login popup window triggered.');
-  };
 
   return (
     <div className="login-page-wrapper">

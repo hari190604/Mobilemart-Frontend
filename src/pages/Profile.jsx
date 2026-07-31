@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import './Profile.css';
 
 /**
  * TODO: FRONTEND DEVELOPER 2 - Profile Details API Integration
@@ -100,14 +101,14 @@ export const Profile = () => {
       <div className="grid grid-cols-3 gap-2" style={{ alignItems: 'start' }}>
         
         {/* Left Side: Avatar Card */}
-        <div className="card text-center" style={{ padding: '24px', gridColumn: 'span 1' } && window.innerWidth < 768 ? { gridColumn: 'span 3' } : { gridColumn: 'span 1' }}>
+        <div className="card text-center profile-avatar-card">
           <div style={{
             width: '80px',
             height: '80px',
             borderRadius: '50%',
             background: 'var(--accent)',
             fontSize: '32px',
-            color: '#0f172a',
+            color: '#ffffff',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -128,7 +129,7 @@ export const Profile = () => {
         </div>
 
         {/* Right Side: Account Forms */}
-        <form onSubmit={handleUpdate} className="card" style={{ padding: '24px', gridColumn: 'span 2' } && window.innerWidth < 768 ? { gridColumn: 'span 3' } : { gridColumn: 'span 2' }}>
+        <form onSubmit={handleUpdate} className="card profile-form-card">
           <h3 style={{ fontSize: '18px', borderBottom: '1px solid var(--border)', paddingBottom: '12px', marginBottom: '20px' }}>Personal Profile</h3>
 
           <div className="form-group">

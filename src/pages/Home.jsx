@@ -19,9 +19,18 @@ export const Home = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  const [productsList] = useState(() => {
+    try {
+      const saved = localStorage.getItem('products');
+      return saved ? JSON.parse(saved) : mockProducts;
+    } catch {
+      return mockProducts;
+    }
+  });
+
   // Filter products
-  const featuredMobiles = mockProducts.filter(p => p.category === 'Smartphones');
-  const bestSellers = mockProducts.filter(p => p.category !== 'Smartphones').slice(0, 4);
+  const featuredMobiles = productsList.filter(p => p.category === 'Smartphones');
+  const bestSellers = productsList.filter(p => p.category !== 'Smartphones').slice(0, 4);
 
   const handleBrandSelect = (brandName) => {
     navigate(`/products?brand=${encodeURIComponent(brandName)}`);

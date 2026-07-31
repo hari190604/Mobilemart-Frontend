@@ -40,7 +40,7 @@ export const Cart = () => {
 
       <div style={{ display: 'flex', gap: '30px', flexWrap: 'wrap' }}>
         {/* Left: Cart Items lists */}
-        <div style={{ flex: '3 1 600px', display: 'flex', flexDirection: 'col', gap: '16px' }}>
+        <div style={{ flex: '3 1 600px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           
           <div className="card" style={{ padding: '20px' }}>
             {cartItems.map((item) => (
@@ -124,7 +124,7 @@ export const Cart = () => {
           <div className="card bg-glass" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <h3 style={{ fontSize: '20px', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}>Order Summary</h3>
             
-            <div style={{ display: 'flex', flexDirection: 'col', gap: '12px', fontSize: '15px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '15px' }}>
               <div className="flex justify-between">
                 <span className="text-muted">Subtotal Items</span>
                 <span style={{ fontWeight: '650' }}>${cartTotal.toFixed(2)}</span>

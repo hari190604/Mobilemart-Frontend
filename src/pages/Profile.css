@@ -1,0 +1,16 @@
+.profile-avatar-card {
+  padding: 24px;
+  grid-column: span 1;
+}
+
+.profile-form-card {
+  padding: 24px;
+  grid-column: span 2;
+}
+
+@media (max-width: 768px) {
+  .profile-avatar-card,
+  .profile-form-card {
+    grid-column: span 3;
+  }
+}

@@ -125,9 +125,9 @@
 
 .social-icon-btn:hover {
   background-color: var(--accent);
-  color: #0f172a;
+  color: #ffffff;
   transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
   border-color: transparent;
 }
 
@@ -168,7 +168,7 @@
   bottom: 0;
   border: none;
   background-color: var(--accent);
-  color: #0f172a;
+  color: #ffffff;
   padding: 0 18px;
   font-size: 13px;
   font-weight: 700;

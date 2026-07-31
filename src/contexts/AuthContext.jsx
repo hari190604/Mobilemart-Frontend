@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }) => {
     });
   };
 
-  const register = async (email, password, firstName, lastName, phoneNumber) => {
+  const register = async (_email, _password, _firstName, _lastName, _phoneNumber) => {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({ message: 'Registration initiated. OTP code sent to mail.' });
