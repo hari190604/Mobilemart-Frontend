@@ -96,27 +96,44 @@
   transform: scale(1.05);
 }
 
+/* Keep these from main */
+.profile-avatar-card {
+  padding: 24px;
+  grid-column: span 1;
+}
+
+.profile-form-card {
+  padding: 24px;
+  grid-column: span 2;
+}
+
 @media (max-width: 768px) {
   .profile-dashboard {
     grid-template-columns: 1fr;
   }
-  
+
   .profile-sidebar {
     padding: 16px;
   }
-  
+
   .profile-menu {
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: space-between;
   }
-  
+
   .profile-menu-item {
     flex: 1 1 120px;
     justify-content: center;
   }
-  
+
   .profile-details-grid {
     grid-template-columns: 1fr;
+  }
+
+  /* Keep these from main */
+  .profile-avatar-card,
+  .profile-form-card {
+    grid-column: span 3;
   }
 }

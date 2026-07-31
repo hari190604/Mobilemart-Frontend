@@ -476,3 +476,15 @@
     margin-right: 16px;
   }
 }
+
+.desktop-only-controls {
+  display: flex !important;
+  align-items: center;
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .desktop-only-controls {
+    display: none !important;
+  }
+}

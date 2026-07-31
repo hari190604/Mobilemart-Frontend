@@ -12,19 +12,68 @@ export const ProductDetails = () => {
   const [quantity, setQuantity] = useState(1);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [activeTab, setActiveTab] = useState('specs');
-  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [isWishlisted, setIsWishlisted] = useState(() => {
+    try {
+      const saved = localStorage.getItem('mobilemart_wishlist');
+      const wishlist = saved ? JSON.parse(saved) : [];
+      return wishlist.includes(parseInt(id));
+    } catch {
+      return false;
+    }
+  });
   const [wishlistToast, setWishlistToast] = useState('');
 
+  // Load products list from localStorage
+  const [productsList] = useState(() => {
+    try {
+      const saved = localStorage.getItem('products');
+      return saved ? JSON.parse(saved) : mockProducts;
+    } catch {
+      return mockProducts;
+    }
+  });
+
   // Retrieve the requested product
-  const product = mockProducts.find((p) => p.id === parseInt(id));
+  const product = productsList.find((p) => p.id === parseInt(id));
 
   // Reset states and scroll to top when product ID transitions
   useEffect(() => {
     setActiveImageIndex(0);
     setQuantity(1);
-    setIsWishlisted(false);
+    try {
+      const saved = localStorage.getItem('mobilemart_wishlist');
+      const wishlist = saved ? JSON.parse(saved) : [];
+      setIsWishlisted(wishlist.includes(parseInt(id)));
+    } catch {
+      setIsWishlisted(false);
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [id]);
+
+  // Sync state if changed externally
+  useEffect(() => {
+    const syncWishlist = () => {
+      try {
+        const saved = localStorage.getItem('mobilemart_wishlist');
+        const wishlist = saved ? JSON.parse(saved) : [];
+        setIsWishlisted(wishlist.includes(parseInt(id)));
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    window.addEventListener('wishlist-updated', syncWishlist);
+    return () => window.removeEventListener('wishlist-updated', syncWishlist);
+  }, [id]);
+
+  // Handle toast timeout cleanup
+  useEffect(() => {
+    if (wishlistToast) {
+      const timer = setTimeout(() => {
+        setWishlistToast('');
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [wishlistToast]);
 
   if (!product) {
     return (
@@ -72,14 +121,28 @@ export const ProductDetails = () => {
   };
 
   const handleToggleWishlist = () => {
-    const nextState = !isWishlisted;
-    setIsWishlisted(nextState);
-    
-    // Set a temporary user friendly indicator toast
-    setWishlistToast(nextState ? 'Added to Wishlist! ❤️' : 'Removed from Wishlist. 💔');
-    setTimeout(() => {
-      setWishlistToast('');
-    }, 2000);
+    setIsWishlisted((prev) => {
+      const nextState = !prev;
+      try {
+        const saved = localStorage.getItem('mobilemart_wishlist');
+        let wishlist = saved ? JSON.parse(saved) : [];
+        const numId = parseInt(id);
+        if (nextState) {
+          if (!wishlist.includes(numId)) {
+            wishlist.push(numId);
+          }
+        } else {
+          wishlist = wishlist.filter((x) => x !== numId);
+        }
+        localStorage.setItem('mobilemart_wishlist', JSON.stringify(wishlist));
+        window.dispatchEvent(new Event('wishlist-updated'));
+      } catch (err) {
+        console.error(err);
+      }
+      
+      setWishlistToast(nextState ? 'Added to Wishlist! ❤️' : 'Removed from Wishlist. 💔');
+      return nextState;
+    });
   };
 
   // Mock list of reviews

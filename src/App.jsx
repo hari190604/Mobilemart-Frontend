@@ -23,9 +23,11 @@ import OrderSuccess from './pages/OrderSuccess';
 import OrderDetails from './pages/OrderDetails';
 import PaymentSuccess from './pages/PaymentSuccess';
 import PaymentFailed from './pages/PaymentFailed';
+import Wishlist from './pages/Wishlist';
 
 // Route Guards imports
 import ProtectedRoute from './components/ProtectedRoute';
+import GuestRoute from './components/GuestRoute';
 
 function App() {
   return (
@@ -33,18 +35,47 @@ function App() {
       <CartProvider>
         <BrowserRouter>
           <Routes>
-            {/* Main Application Routes */}
-            <Route path="/" element={<RootLayout />}>
-              {/* Public Views */}
+            {/* Guest Pages (Outside RootLayout, so no Navbar, Footer or layout wrapper is rendered) */}
+            <Route 
+              path="/login" 
+              element={
+                <GuestRoute>
+                  <Login />
+                </GuestRoute>
+              } 
+            />
+            <Route 
+              path="/register" 
+              element={
+                <GuestRoute>
+                  <Register />
+                </GuestRoute>
+              } 
+            />
+            <Route 
+              path="/verify-otp" 
+              element={
+                <GuestRoute>
+                  <VerifyOtp />
+                </GuestRoute>
+              } 
+            />
+
+            {/* Authenticated Shopping Views (Includes Navbar & Footer, protected by general auth) */}
+            <Route 
+              path="/" 
+              element={
+                <ProtectedRoute>
+                  <RootLayout />
+                </ProtectedRoute>
+              }
+            >
+              {/* Authenticated Customer Pages */}
               <Route index element={<Home />} />
               <Route path="products" element={<Products />} />
               <Route path="products/:id" element={<ProductDetails />} />
               <Route path="cart" element={<Cart />} />
-              
-              {/* Authenticated Guest Views */}
-              <Route path="login" element={<Login />} />
-              <Route path="register" element={<Register />} />
-              <Route path="verify-otp" element={<VerifyOtp />} />
+              <Route path="wishlist" element={<Wishlist />} />
 
               {/* Customer Accounts Guard - Requires Customer/Admin */}
               <Route 
@@ -121,10 +152,10 @@ function App() {
                   </ProtectedRoute>
                 } 
               />
-
-              {/* Wildcard redirects back to home */}
-              <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
+
+            {/* Wildcard redirects back to home */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
       </CartProvider>

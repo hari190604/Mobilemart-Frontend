@@ -33,7 +33,7 @@ export const Cart = () => {
 
       <div className="cart-container">
         {/* Left: Cart Items lists */}
-        <div className="cart-items-section">
+<div className="cart-items-section">
           <div className="card" style={{ padding: '20px' }}>
             {cartItems.map((item) => (
               <div key={item.id} className="cart-item-row">
@@ -105,7 +105,7 @@ export const Cart = () => {
             <h3 className="summary-title">Order Summary</h3>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '15px' }}>
-              <div className="summary-row">
+<div className="summary-row">
                 <span className="text-muted">Subtotal Items</span>
                 <span style={{ fontWeight: '650' }}>${cartTotal.toFixed(2)}</span>
               </div>

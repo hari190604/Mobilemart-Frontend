@@ -11,7 +11,15 @@ export const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [theme, setTheme] = useState('light');
   const [scrolled, setScrolled] = useState(false);
-  const [wishlistCount, setWishlistCount] = useState(2); // Mock initial wishlist items count
+  const [wishlistCount, setWishlistCount] = useState(() => {
+    try {
+      const saved = localStorage.getItem('mobilemart_wishlist');
+      const wishlist = saved ? JSON.parse(saved) : [];
+      return wishlist.length;
+    } catch {
+      return 0;
+    }
+  });
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -39,6 +47,21 @@ export const Navbar = () => {
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [location]);
+
+  // Synchronize wishlist count dynamically
+  useEffect(() => {
+    const handleWishlistUpdate = () => {
+      try {
+        const saved = localStorage.getItem('mobilemart_wishlist');
+        const wishlist = saved ? JSON.parse(saved) : [];
+        setWishlistCount(wishlist.length);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    window.addEventListener('wishlist-updated', handleWishlistUpdate);
+    return () => window.removeEventListener('wishlist-updated', handleWishlistUpdate);
+  }, []);
 
   const toggleTheme = () => {
     const nextTheme = theme === 'light' ? 'dark' : 'light';
@@ -154,7 +177,7 @@ export const Navbar = () => {
             </Link>
 
             {/* Session Controls & user profile dropdown */}
-            <div style={{ display: 'none', display: 'flex' } && window.innerWidth < 900 ? { display: 'none' } : { display: 'flex' }}>
+            <div className="desktop-only-controls">
               {user ? (
                 /* User profile dropdown placeholder */
                 <div className="nav-dropdown">

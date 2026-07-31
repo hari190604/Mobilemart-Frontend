@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 
 export const Checkout = () => {
   const { cartItems, cartTotal, clearCart } = useCart();
   const { user } = useAuth();
-  const navigate = useNavigate();
 
   // Address parameters
   const [address, setAddress] = useState({
