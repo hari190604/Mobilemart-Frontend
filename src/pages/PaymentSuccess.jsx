@@ -6,10 +6,9 @@ export const PaymentSuccess = () => {
   const [orderDetails, setOrderDetails] = useState(null);
 
   useEffect(() => {
-    // Read the latest order from the localStorage order history
-    const savedOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-    if (savedOrders.length > 0) {
-      setOrderDetails(savedOrders[savedOrders.length - 1]);
+    const savedOrder = localStorage.getItem('lastOrder');
+    if (savedOrder) {
+      setOrderDetails(JSON.parse(savedOrder));
     } else {
       // Redirection if no order was processed
       navigate('/');
@@ -59,11 +58,13 @@ export const PaymentSuccess = () => {
           marginBottom: '10px',
           fontFamily: 'var(--font-title)'
         }}>
-          Payment Authorized!
+          {orderDetails.isCOD ? 'Order Successfully Placed!' : 'Payment Authorized!'}
         </h1>
         
         <p className="text-muted" style={{ fontSize: '15px', marginBottom: '32px' }}>
-          Your digital funds transaction has been cleared. Thank you for your purchase.
+          {orderDetails.isCOD 
+            ? 'Hello! Your order has been received successfully. keep ready to receive...See you there....'
+            : 'Your digital funds transaction has been cleared. Thank you for your purchase.'}
         </p>
 
         {/* Payment Summary */}
@@ -80,7 +81,7 @@ export const PaymentSuccess = () => {
         }}>
           <div className="flex justify-between" style={{ fontSize: '14px' }}>
             <span className="text-muted">Transaction ID</span>
-            <span style={{ fontFamily: 'monospace', fontWeight: '700', color: 'var(--text-main)' }}>{orderDetails.transactionId}</span>
+            <span style={{ fontFamily: 'monospace', fontWeight: '700', color: 'var(--text-main)' }}>{orderDetails.razorpayPaymentId || 'N/A'}</span>
           </div>
 
           <div className="flex justify-between" style={{ fontSize: '14px' }}>
@@ -90,13 +91,15 @@ export const PaymentSuccess = () => {
 
           <div className="flex justify-between" style={{ fontSize: '14px' }}>
             <span className="text-muted">Date</span>
-            <span style={{ fontWeight: '600' }}>{orderDetails.date}</span>
+            <span style={{ fontWeight: '600' }}>
+              {orderDetails.createdAt ? new Date(orderDetails.createdAt).toLocaleDateString() : 'N/A'}
+            </span>
           </div>
 
           <div className="flex justify-between" style={{ fontSize: '14px' }}>
             <span className="text-muted">Payment Mode</span>
             <span style={{ fontWeight: '700', color: 'var(--accent)' }}>
-              {orderDetails.paymentMethod === 'CARD' ? '💳 Credit Card' : '📱 UPI / Wallet'}
+              {orderDetails.isCOD ? 'Cash on Delivery' : 'Online Payment'}
             </span>
           </div>
 
@@ -104,7 +107,7 @@ export const PaymentSuccess = () => {
 
           <div className="flex justify-between" style={{ fontSize: '18px', fontWeight: '800' }}>
             <span>Amount Charged</span>
-            <span style={{ color: 'var(--text-main)' }}>${orderDetails.total.toFixed(2)}</span>
+            <span style={{ color: 'var(--text-main)' }}>₹{(orderDetails.totalAmount || 0).toFixed(2)}</span>
           </div>
         </div>
 

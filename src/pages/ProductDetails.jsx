@@ -1,69 +1,85 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { mockProducts } from '../utils/mockProducts';
 import { useCart } from '../contexts/CartContext';
+import api from '../services/api';
+import { inferBrandFromName } from '../utils/brandHelper';
 import './ProductDetails.css';
 
 export const ProductDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addToCart } = useCart();
+  const cartContext = useCart();
+  const { addToCart, cartItems, removeFromCart, toggleWishlist, wishlistItems } = cartContext;
 
   const [quantity, setQuantity] = useState(1);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [activeTab, setActiveTab] = useState('specs');
-  const [isWishlisted, setIsWishlisted] = useState(() => {
-    try {
-      const saved = localStorage.getItem('mobilemart_wishlist');
-      const wishlist = saved ? JSON.parse(saved) : [];
-      return wishlist.includes(parseInt(id));
-    } catch {
-      return false;
-    }
-  });
+  const [isWishlisted, setIsWishlisted] = useState(false);
   const [wishlistToast, setWishlistToast] = useState('');
 
-  // Load products list from localStorage
-  const [productsList] = useState(() => {
-    try {
-      const saved = localStorage.getItem('products');
-      return saved ? JSON.parse(saved) : mockProducts;
-    } catch {
-      return mockProducts;
-    }
-  });
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [relatedProducts, setRelatedProducts] = useState([]);
 
-  // Retrieve the requested product
-  const product = productsList.find((p) => p.id === parseInt(id));
+  useEffect(() => {
+    const fetchProductDetails = async () => {
+      setLoading(true);
+      try {
+        const response = await api.get(`/public/products/${id}`);
+        const p = response.data.data;
+        if (p) {
+          const mapped = {
+            id: p.productId,
+            name: p.category && p.category.categoryName === 'Refurbished Phones' && !p.name.includes('(Refurbished)') ? `${p.name} (Refurbished)` : p.name,
+            description: p.category && p.category.categoryName === 'Refurbished Phones' && !p.description.includes('(Refurbished)') ? `${p.description} (Refurbished)` : p.description,
+            price: p.price,
+            stockQuantity: p.stock,
+            categoryId: p.category ? p.category.categoryId : p.categoryId,
+            category: (p.category && p.category.categoryName) ? p.category.categoryName : 'General',
+            brand: inferBrandFromName(p.name),
+            rating: 4.8,
+            reviewsCount: 150,
+            imageUrl: p.images && p.images.length > 0 ? p.images[0].imageUrl : 'https://via.placeholder.com/400',
+            images: p.images || []
+          };
+          setProduct(mapped);
+
+          // Fetch related products
+          const actualCategoryId = p.category ? p.category.categoryId : p.categoryId;
+          if (actualCategoryId) {
+            const relRes = await api.get(`/public/products/category/${actualCategoryId}`);
+            const relItems = relRes.data.data.content || relRes.data.data || [];
+            setRelatedProducts(relItems.filter(item => item.productId !== mapped.id).map(rp => ({
+              id: rp.productId,
+              name: rp.name,
+              price: rp.price,
+              brand: 'MobileMart',
+              imageUrl: rp.images && rp.images.length > 0 ? rp.images[0].imageUrl : 'https://via.placeholder.com/200'
+            })).slice(0, 4));
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load product details", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProductDetails();
+  }, [id]);
 
   // Reset states and scroll to top when product ID transitions
   useEffect(() => {
     setActiveImageIndex(0);
     setQuantity(1);
-    try {
-      const saved = localStorage.getItem('mobilemart_wishlist');
-      const wishlist = saved ? JSON.parse(saved) : [];
-      setIsWishlisted(wishlist.includes(parseInt(id)));
-    } catch {
-      setIsWishlisted(false);
-    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [id]);
 
-  // Sync state if changed externally
+  // Sync wishlist state from CartContext
   useEffect(() => {
-    const syncWishlist = () => {
-      try {
-        const saved = localStorage.getItem('mobilemart_wishlist');
-        const wishlist = saved ? JSON.parse(saved) : [];
-        setIsWishlisted(wishlist.includes(parseInt(id)));
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    window.addEventListener('wishlist-updated', syncWishlist);
-    return () => window.removeEventListener('wishlist-updated', syncWishlist);
-  }, [id]);
+    if (cartContext && cartContext.wishlistItems && product) {
+      setIsWishlisted(cartContext.wishlistItems.includes(product.id));
+    }
+  }, [cartContext.wishlistItems, product]);
 
   // Handle toast timeout cleanup
   useEffect(() => {
@@ -74,6 +90,14 @@ export const ProductDetails = () => {
       return () => clearTimeout(timer);
     }
   }, [wishlistToast]);
+
+  if (loading) {
+    return (
+      <div className="card text-center animate-fade-in" style={{ padding: '60px', marginTop: '40px' }}>
+        <h2 style={{ fontSize: '24px', margin: '20px 0 10px 0', color: 'var(--text-main)' }}>Loading details...</h2>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -88,20 +112,8 @@ export const ProductDetails = () => {
     );
   }
 
-  // Create simulated multi-angle thumbnails
-  const galleryImages = [
-    product.imageUrl,
-    product.imageUrl + "?sig=angle2",
-    product.imageUrl + "?sig=angle3"
-  ];
+  // Prices are shown exactly as in the database
 
-  // Calculate 15% crossed out original price to render discount badges
-  const originalPrice = product.price * 1.15;
-
-  // Retrieve products in the same category (excluding current)
-  const relatedProducts = mockProducts
-    .filter((p) => p.category === product.category && p.id !== product.id)
-    .slice(0, 4);
 
   const handleQtyChange = (val) => {
     if (val < 1) return;
@@ -109,10 +121,14 @@ export const ProductDetails = () => {
     setQuantity(val);
   };
 
+  const isInCart = cartItems?.some(item => item.id === product?.id);
+
   const handleAddToCart = () => {
-    addToCart(product, quantity);
-    // Display standard overlay feedback
-    alert(`Added ${quantity}x ${product.name} to your shopping cart!`);
+    if (isInCart) {
+      removeFromCart(product.id);
+    } else {
+      addToCart(product, quantity);
+    }
   };
 
   const handleBuyNow = () => {
@@ -120,29 +136,11 @@ export const ProductDetails = () => {
     navigate('/checkout');
   };
 
-  const handleToggleWishlist = () => {
-    setIsWishlisted((prev) => {
-      const nextState = !prev;
-      try {
-        const saved = localStorage.getItem('mobilemart_wishlist');
-        let wishlist = saved ? JSON.parse(saved) : [];
-        const numId = parseInt(id);
-        if (nextState) {
-          if (!wishlist.includes(numId)) {
-            wishlist.push(numId);
-          }
-        } else {
-          wishlist = wishlist.filter((x) => x !== numId);
-        }
-        localStorage.setItem('mobilemart_wishlist', JSON.stringify(wishlist));
-        window.dispatchEvent(new Event('wishlist-updated'));
-      } catch (err) {
-        console.error(err);
-      }
-      
-      setWishlistToast(nextState ? 'Added to Wishlist! ❤️' : 'Removed from Wishlist. 💔');
-      return nextState;
-    });
+  const handleToggleWishlist = async () => {
+    if (product) {
+      await toggleWishlist(product.id);
+      setWishlistToast(isWishlisted ? 'Removed from Wishlist. 💔' : 'Added to Wishlist! ❤️');
+    }
   };
 
   // Mock list of reviews
@@ -194,20 +192,20 @@ export const ProductDetails = () => {
         <div className="gallery-wrapper">
           <div className="gallery-main-preview">
             <img 
-              src={galleryImages[activeImageIndex]} 
+              src={product.images && product.images.length > 0 ? product.images[activeImageIndex]?.imageUrl : product.imageUrl} 
               alt={`${product.name} detail view`} 
               className="gallery-main-img"
             />
           </div>
           <div className="gallery-thumbnails-row">
-            {galleryImages.map((image, idx) => (
+            {product.images && product.images.map((image, idx) => (
               <div 
                 key={idx}
                 className={`gallery-thumbnail-card ${activeImageIndex === idx ? 'active' : ''}`}
                 onMouseEnter={() => setActiveImageIndex(idx)}
                 onClick={() => setActiveImageIndex(idx)}
               >
-                <img src={image} alt={`thumbnail ${idx + 1}`} className="gallery-thumbnail-img" />
+                <img src={image.imageUrl} alt={`thumbnail ${idx + 1}`} className="gallery-thumbnail-img" />
               </div>
             ))}
           </div>
@@ -229,10 +227,14 @@ export const ProductDetails = () => {
             </div>
 
             {/* Price display with discount details */}
-            <div className="price-display-wrapper">
-              <span className="active-discount-price">${product.price.toFixed(0)}</span>
-              <span className="original-price-crossed">${originalPrice.toFixed(0)}</span>
-              <span className="discount-tag-badge">15% OFF</span>
+            <div className="price-display-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '10px', marginBottom: '20px' }}>
+              <span className="active-discount-price" style={{ fontSize: '28px', fontWeight: 'bold', color: 'var(--text-main)' }}>₹{product.price.toFixed(0)}</span>
+              <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)', fontSize: '18px' }}>
+                ₹{(product.price / (1 - [15, 23, 27][(product.id || 0) % 3] / 100)).toFixed(0)}
+              </span>
+              <span style={{ backgroundColor: '#10b98120', color: '#10b981', padding: '4px 8px', borderRadius: '4px', fontSize: '14px', fontWeight: 'bold' }}>
+                {[15, 23, 27][(product.id || 0) % 3]}% OFF
+              </span>
             </div>
           </div>
 
@@ -294,7 +296,7 @@ export const ProductDetails = () => {
                   className="btn btn-primary"
                   style={{ flex: '1.2', padding: '14px', fontSize: '15px' }}
                 >
-                  🛒 Add to Cart
+                  {isInCart ? '🗑️ Remove from Cart' : '🛒 Add to Cart'}
                 </button>
                 <button 
                   type="button" 
@@ -421,7 +423,7 @@ export const ProductDetails = () => {
                   {item.name}
                 </Link>
                 <div className="related-card-bottom">
-                  <span className="related-card-price">${item.price.toFixed(0)}</span>
+                  <span className="related-card-price">₹{item.price.toFixed(0)}</span>
                   <button 
                     type="button" 
                     onClick={() => addToCart(item, 1)}

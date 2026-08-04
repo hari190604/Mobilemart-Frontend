@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
+import api from '../services/api';
 
 const AuthContext = createContext();
 
@@ -13,62 +14,50 @@ export const AuthProvider = ({ children }) => {
     if (savedUser && savedToken) {
       setUser(JSON.parse(savedUser));
       setToken(savedToken);
+      // Fetch latest profile to ensure token is still valid
+      api.get('/users/profile')
+        .then(response => {
+          const freshUser = { ...JSON.parse(savedUser), ...response.data.data };
+          setUser(freshUser);
+          localStorage.setItem('user', JSON.stringify(freshUser));
+        })
+        .catch(() => {
+          logout();
+        });
     }
     setLoading(false);
   }, []);
 
   const login = async (email, password) => {
-    // Simulated backend check
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (password.length < 6) {
-          reject(new Error('Password must be at least 6 characters.'));
-          return;
-        }
-
-        let userRole = 'ROLE_CUSTOMER';
-        let name = 'John Customer';
-        
-        if (email.toLowerCase() === 'admin@mobilemart.com' || email.toLowerCase().includes('admin')) {
-          userRole = 'ROLE_ADMIN';
-          name = 'Admin Controller';
-        }
-
-        const mockUser = {
-          email: email,
-          name: name,
-          role: userRole,
-          phoneNumber: '+1234567890',
-        };
-        const mockToken = 'mock_jwt_token_' + Math.random().toString(36).substring(7);
-
-        localStorage.setItem('user', JSON.stringify(mockUser));
-        localStorage.setItem('token', mockToken);
-        setUser(mockUser);
-        setToken(mockToken);
-        resolve(mockUser);
-      }, 800);
-    });
+    const response = await api.post('/auth/login', { identifier:email, password });
+    const { token, userId, username, role } = response?.data?.data;
+    const userData = { id: userId, email, name: username, role: role };
+    
+    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('token', token);
+    setUser(userData);
+    setToken(token);
+    return userData;
   };
 
-  const register = async (_email, _password, _firstName, _lastName, _phoneNumber) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({ message: 'Registration initiated. OTP code sent to mail.' });
-      }, 800);
+  const register = async (email, password, fullName, mobileNumber, confirmPassword) => {
+    // Generate a username from the email
+    const username = email.split('@')[0];
+    
+    const response = await api.post('/auth/register', { 
+      username,
+      fullName,
+      mobileNumber,
+      email, 
+      password,
+      confirmPassword
     });
+    return response.data;
   };
 
   const verifyOtp = async (email, otp) => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (otp === '123456' || otp.length === 6) {
-          resolve({ message: 'Account activated successfully.' });
-        } else {
-          reject(new Error('Invalid OTP code. Use 123456 for testing.'));
-        }
-      }, 800);
-    });
+    const response = await api.post('/auth/verify-otp', { email, otp });
+    return response.data;
   };
 
   const logout = () => {
@@ -79,7 +68,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const isAdmin = () => {
-    return user && user.role === 'ROLE_ADMIN';
+    return user && (user.role === 'ROLE_ADMIN' || user.role === 'ADMIN');
   };
 
   return (

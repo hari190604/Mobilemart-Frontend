@@ -1,51 +1,65 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { mockProducts } from '../utils/mockProducts';
+
 import { useCart } from '../contexts/CartContext';
 import { ProductCard } from '../components/common/ProductCard/ProductCard';
 
-export const Wishlist = () => {
-  const { addToCart } = useCart();
-  const [wishlistItems, setWishlistItems] = useState([]);
+import api from '../services/api';
 
-  // Fetch wishlisted products from local storage on component mount
-  const loadWishlist = () => {
+import { useAuth } from '../contexts/AuthContext';
+
+export const Wishlist = () => {
+  const { addToCart, wishlistItems: contextWishlistIds, clearWishlist } = useCart();
+  const { user } = useAuth();
+  const [wishlistItems, setWishlistItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch wishlisted products from API
+  const loadWishlist = async () => {
+    if (!user) return;
     try {
-      const saved = localStorage.getItem('mobilemart_wishlist');
-      const wishlistIds = saved ? JSON.parse(saved) : [];
-      const items = mockProducts.filter((product) => wishlistIds.includes(product.id));
-      setWishlistItems(items);
+      setLoading(true);
+      const response = await api.get('/cart/wishlist');
+      const items = response.data.data || [];
+      
+      const mapped = items.map(p => ({
+        id: p.productId,
+        name: p.productName,
+        price: p.price,
+        stockQuantity: p.quantity, // Quantity field here might not map directly to stock but for Wishlist it's ok
+        brand: 'MobileMart',
+        rating: 4.5,
+        reviewsCount: 120,
+        imageUrl: p.productImageUrl || 'https://via.placeholder.com/200'
+      }));
+      
+      setWishlistItems(mapped);
     } catch (err) {
-      console.error('Error loading wishlist items from localStorage:', err);
+      console.error('Error loading wishlist items:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadWishlist();
-
-    // Listen for wishlist updates that happen on this page or other components
-    const handleWishlistUpdate = () => {
+    if (user) {
       loadWishlist();
-    };
-
-    window.addEventListener('wishlist-updated', handleWishlistUpdate);
-    return () => window.removeEventListener('wishlist-updated', handleWishlistUpdate);
-  }, []);
+    }
+  }, [user, contextWishlistIds]);
 
   const handleAddToCart = (product) => {
     addToCart(product, 1);
-    alert(`Successfully added ${product.name} to your shopping cart! 🛒`);
+
   };
 
-  const handleClearWishlist = () => {
-    try {
-      localStorage.setItem('mobilemart_wishlist', JSON.stringify([]));
-      setWishlistItems([]);
-      window.dispatchEvent(new Event('wishlist-updated'));
-    } catch (err) {
-      console.error(err);
-    }
+  const handleClearWishlist = async () => {
+    await clearWishlist();
+    setWishlistItems([]);
   };
+
+  if (loading) {
+    return <div style={{ padding: '60px', textAlign: 'center' }}>Loading your wishlist...</div>;
+  }
 
   if (wishlistItems.length === 0) {
     return (
@@ -71,13 +85,18 @@ export const Wishlist = () => {
             Keep track of the smartphones and accessories you are interested in.
           </p>
         </div>
-        <button 
-          onClick={handleClearWishlist} 
-          className="btn btn-secondary" 
-          style={{ color: 'var(--danger)', borderColor: 'rgba(239, 68, 68, 0.2)' }}
-        >
-          Clear All Favorites 💔
-        </button>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <button 
+            onClick={handleClearWishlist} 
+            className="btn btn-secondary" 
+            style={{ color: 'var(--danger)', borderColor: 'rgba(239, 68, 68, 0.2)' }}
+          >
+            Clear All Favorites 💔
+          </button>
+          <Link to="/cart" className="btn btn-primary">
+            Proceed to Cart 🛒
+          </Link>
+        </div>
       </div>
 
       {/* Recommended Grid Layout */}

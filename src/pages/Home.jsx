@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { mockProducts } from '../utils/mockProducts';
 import { useCart } from '../contexts/CartContext';
+import api from '../services/api';
+import { inferBrandFromName } from '../utils/brandHelper';
 import './Home.css';
 
 export const Home = () => {
@@ -10,23 +11,48 @@ export const Home = () => {
 
   const [loading, setLoading] = useState(true);
   const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [productsList, setProductsList] = useState([]);
+  const [categoriesList, setCategoriesList] = useState([]);
 
-  // Simulate loading delay for shimmer effect
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 850);
-    return () => clearTimeout(timer);
+    const fetchCategories = async () => {
+      try {
+        const response = await api.get('/public/categories');
+        const items = response.data.data || [];
+        setCategoriesList(items);
+      } catch (err) {
+        console.error("Failed to load categories", err);
+      }
+    };
+    fetchCategories();
   }, []);
 
-  const [productsList] = useState(() => {
-    try {
-      const saved = localStorage.getItem('products');
-      return saved ? JSON.parse(saved) : mockProducts;
-    } catch {
-      return mockProducts;
-    }
-  });
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await api.get('/public/products?size=500');
+        const items = response.data.data.content || response.data.data || [];
+        const mapped = items.map(p => ({
+          id: p.productId,
+          name: p.category && p.category.categoryName === 'Refurbished Phones' && !p.name.includes('(Refurbished)') ? `${p.name} (Refurbished)` : p.name,
+          description: p.category && p.category.categoryName === 'Refurbished Phones' && !p.description.includes('(Refurbished)') ? `${p.description} (Refurbished)` : p.description,
+          price: p.price,
+          stockQuantity: p.stock,
+          category: p.category ? p.category.categoryName : 'General',
+          brand: inferBrandFromName(p.name),
+          rating: 4.5,
+          reviewsCount: 120,
+          imageUrl: p.images && p.images.length > 0 ? p.images[0].imageUrl : 'https://via.placeholder.com/200'
+        }));
+        setProductsList(mapped);
+      } catch (err) {
+        console.error("Failed to load products", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   // Filter products
   const featuredMobiles = productsList.filter(p => p.category === 'Smartphones');
@@ -137,25 +163,30 @@ export const Home = () => {
           <p className="section-sub-desc">Explore premium mobile tech categories.</p>
         </div>
         <div className="grid grid-cols-4 gap-2 font-sans">
-          {[
-            { name: 'Smartphones', icon: '📱', desc: 'Premium phones' },
-            { name: 'Wearables', icon: '⌚', desc: 'Smartwatches & monitors' },
-            { name: 'Accessories', icon: '🔌', desc: 'Chargers & audio buds' },
-            { name: 'Tablets', icon: '📁', desc: 'Next-gen iPads & tabs' }
-          ].map((cat) => (
-            <Link 
-              key={cat.name} 
-              to={`/products?category=${cat.name}`} 
-              className="card flex align-center gap-2" 
-              style={{ padding: '20px', textDecoration: 'none', justifyContent: 'flex-start' }}
-            >
-              <span style={{ fontSize: '36px' }}>{cat.icon}</span>
-              <div style={{ textAlign: 'left' }}>
-                <h3 style={{ fontSize: '17px', fontWeight: '700', color: 'var(--text-main)' }}>{cat.name}</h3>
-                <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{cat.desc}</p>
-              </div>
-            </Link>
-          ))}
+          {categoriesList.map((cat) => {
+            const categoryName = cat.categoryName || '';
+            const catNameLower = categoryName.toLowerCase();
+            let icon = '📦';
+            if (catNameLower.includes('smartphone') || catNameLower.includes('phone') || catNameLower.includes('mobile')) icon = '📱';
+            else if (catNameLower.includes('wearable') || catNameLower.includes('watch')) icon = '⌚';
+            else if (catNameLower.includes('access') || catNameLower.includes('audio')) icon = '🔌';
+            else if (catNameLower.includes('tablet') || catNameLower.includes('pad')) icon = '📁';
+
+            return (
+              <Link 
+                key={cat.categoryId} 
+                to={`/products?category=${encodeURIComponent(categoryName)}`} 
+                className="card flex align-center gap-2" 
+                style={{ padding: '20px', textDecoration: 'none', justifyContent: 'flex-start' }}
+              >
+                <span style={{ fontSize: '36px' }}>{icon}</span>
+                <div style={{ textAlign: 'left' }}>
+                  <h3 style={{ fontSize: '17px', fontWeight: '700', color: 'var(--text-main)' }}>{categoryName}</h3>
+                  <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Explore {categoryName} collection</p>
+                </div>
+              </Link>
+            );
+          })}
         </div>
       </section>
 
@@ -202,7 +233,12 @@ export const Home = () => {
                   </div>
 
                   <div className="product-bottom-row">
-                    <span className="product-card-price">${product.price.toFixed(2)}</span>
+                    <span className="product-card-price" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      ₹{product.price.toFixed(2)}
+                      <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)', fontSize: '13px' }}>
+                        ₹{(product.price / (1 - [15, 23, 27][(product.id || 0) % 3] / 100)).toFixed(2)}
+                      </span>
+                    </span>
                     <button 
                       onClick={() => addToCart(product)} 
                       className="btn btn-primary btn-sm font-sans"
@@ -246,7 +282,7 @@ export const Home = () => {
             <div className="offer-content-box">
               <span className="offer-badge">Free Shipping</span>
               <h3 className="offer-title">Free Courier Express</h3>
-              <p className="offer-desc">Complimentary shipping on orders exceeding $199.</p>
+              <p className="offer-desc">Complimentary shipping on orders exceeding ₹199.</p>
               <div className="offer-coupon">FREESHIP2026</div>
             </div>
           </div>
@@ -298,7 +334,12 @@ export const Home = () => {
                   </div>
 
                   <div className="product-bottom-row">
-                    <span className="product-card-price">${product.price.toFixed(2)}</span>
+                    <span className="product-card-price" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      ₹{product.price.toFixed(2)}
+                      <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)', fontSize: '13px' }}>
+                        ₹{(product.price / (1 - [15, 23, 27][(product.id || 0) % 3] / 100)).toFixed(2)}
+                      </span>
+                    </span>
                     <button 
                       onClick={() => addToCart(product)} 
                       className="btn btn-primary btn-sm font-sans"

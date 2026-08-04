@@ -1,23 +1,57 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { mockProducts } from '../utils/mockProducts';
 import { useCart } from '../contexts/CartContext';
 import { ProductCard } from '../components/common/ProductCard/ProductCard';
+import api from '../services/api';
+import { inferBrandFromName } from '../utils/brandHelper';
 import './Products.css';
 
 export const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { addToCart } = useCart();
+  const [productsList, setProductsList] = useState([]);
+  const [categoriesList, setCategoriesList] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Load products list from localStorage (synced with admin dashboard additions/deletions)
-  const [productsList] = useState(() => {
-    try {
-      const saved = localStorage.getItem('products');
-      return saved ? JSON.parse(saved) : mockProducts;
-    } catch {
-      return mockProducts;
-    }
-  });
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await api.get('/public/categories');
+        const items = response.data.data || [];
+        setCategoriesList(items.map(c => c.categoryName));
+      } catch (err) {
+        console.error("Failed to load categories", err);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await api.get('/public/products?size=500');
+        const items = response.data.data.content || response.data.data || [];
+        const mapped = items.map(p => ({
+          id: p.productId,
+          name: p.category && p.category.categoryName === 'Refurbished Phones' && !p.name.includes('(Refurbished)') ? `${p.name} (Refurbished)` : p.name,
+          description: p.category && p.category.categoryName === 'Refurbished Phones' && !p.description.includes('(Refurbished)') ? `${p.description} (Refurbished)` : p.description,
+          price: p.price,
+          stockQuantity: p.stock,
+          category: p.category ? p.category.categoryName : 'General',
+          brand: inferBrandFromName(p.name), 
+          rating: 4.5,
+          reviewsCount: 120,
+          imageUrl: p.images && p.images.length > 0 ? p.images[0].imageUrl : 'https://via.placeholder.com/200'
+        }));
+        setProductsList(mapped);
+      } catch (err) {
+        console.error("Failed to load products", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   // Retrieve route search filters
   const categoryParam = searchParams.get('category') || 'All';
@@ -32,7 +66,7 @@ export const Products = () => {
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
-  const productsPerPage = 6; // Limit items per page to show pagination utility
+  const productsPerPage = 8; // Limit items per page to show pagination utility
 
   // Sync state parameters when route search changes
   useEffect(() => {
@@ -46,8 +80,8 @@ export const Products = () => {
     setCurrentPage(1);
   }, [selectedCategory, selectedBrand, searchQuery, sortBy]);
 
-  // Extract unique categories and brands for sidebar selection filters
-  const categories = ['All', ...new Set(productsList.map((p) => p.category))];
+  // Extract unique categories from backend data and brands from products
+  const categories = ['All', ...new Set(categoriesList)];
   const brands = ['All', ...new Set(productsList.map((p) => p.brand))];
 
   const applyFilters = (cat = selectedCategory, brand = selectedBrand, search = searchQuery) => {
@@ -109,7 +143,7 @@ export const Products = () => {
 
   const handleAddToCart = (product) => {
     addToCart(product, 1);
-    alert(`Successfully added ${product.name} to your shopping cart! 🛒`);
+
   };
 
   return (
@@ -206,7 +240,11 @@ export const Products = () => {
             </span>
           </div>
 
-          {paginatedProducts.length > 0 ? (
+          {loading ? (
+             <div className="card text-center" style={{ padding: '60px' }}>
+                <h3 style={{ color: 'var(--text-main)' }}>Loading Products...</h3>
+             </div>
+          ) : paginatedProducts.length > 0 ? (
             <>
               {/* Product Cards Responsive Grid */}
               <div className="catalog-cards-responsive-grid">

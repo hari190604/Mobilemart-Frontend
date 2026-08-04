@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import FormInput from '../components/common/FormInput';
+import api from '../services/api';
 import './Profile.css';
 
 export const Profile = () => {
@@ -37,24 +38,50 @@ export const Profile = () => {
   const [saveSuccess, setSaveSuccess] = useState('');
   const [error, setError] = useState('');
 
+  const [addressId, setAddressId] = useState(null);
+
   useEffect(() => {
     if (user) {
-      // Sync state with current user context
+      // Basic profile sync
       setProfileData((prev) => ({
         ...prev,
         name: user.name || '',
         email: user.email || '',
-        phoneNumber: user.phoneNumber || '',
-        street: user.address?.street || prev.street,
-        city: user.address?.city || prev.city,
-        state: user.address?.state || prev.state,
-        zipCode: user.address?.zipCode || prev.zipCode,
-        country: user.address?.country || prev.country
+        phoneNumber: user.phoneNumber || ''
       }));
 
-      // Load orders
-      const savedOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-      setRecentOrders(savedOrders.slice(-3).reverse()); // Get 3 latest orders
+      // Fetch addresses and orders
+      const fetchUserData = async () => {
+        try {
+          const [addrRes, orderRes] = await Promise.all([
+            api.get('/addresses'),
+            api.get('/orders?page=0&size=5')
+          ]);
+
+          if (addrRes.data.data && addrRes.data.data.length > 0) {
+            const addr = addrRes.data.data[0];
+            setAddressId(addr.addressId);
+            setProfileData(prev => ({
+              ...prev,
+              street: addr.streetAddress,
+              city: addr.city,
+              state: addr.state,
+              zipCode: addr.postalCode,
+              country: addr.country
+            }));
+          }
+
+          if (orderRes.data && orderRes.data.orders && orderRes.data.orders.products) {
+            setRecentOrders(orderRes.data.orders.products);
+          } else if (orderRes.data && orderRes.data.data && orderRes.data.data.content) {
+            setRecentOrders(orderRes.data.data.content); // Fallback for old paginated style if needed
+          }
+        } catch (error) {
+          console.error("Failed to load user data:", error);
+        }
+      };
+
+      fetchUserData();
     }
   }, [user]);
 
@@ -71,7 +98,7 @@ export const Profile = () => {
     );
   }
 
-  const handleProfileUpdate = (e) => {
+  const handleProfileUpdate = async (e) => {
     e.preventDefault();
     setSaveSuccess('');
     setError('');
@@ -81,50 +108,66 @@ export const Profile = () => {
       return;
     }
 
-    const updatedUser = {
-      ...user,
-      name: profileData.name,
-      phoneNumber: profileData.phoneNumber,
-      address: {
-        street: profileData.street,
+    try {
+      const addressPayload = {
+        fullName: profileData.name,
+        mobileNumber: profileData.phoneNumber || '+1234567890',
+        streetAddress: profileData.street,
         city: profileData.city,
         state: profileData.state,
-        zipCode: profileData.zipCode,
-        country: profileData.country
-      }
-    };
+        postalCode: profileData.zipCode,
+        country: profileData.country,
+        isDefault: true
+      };
 
-    // Save mock updates back to Context/localStorage
-    localStorage.setItem('user', JSON.stringify(updatedUser));
-    setUser(updatedUser);
-    
-    setSaveSuccess('Profile updated successfully!');
-    setTimeout(() => setSaveSuccess(''), 3000);
+      if (addressId) {
+        await api.put(`/addresses/${addressId}`, addressPayload);
+      } else {
+        const res = await api.post('/addresses', addressPayload);
+        setAddressId(res.data.data.addressId);
+      }
+
+      const updatedUser = {
+        ...user,
+        name: profileData.name,
+        phoneNumber: profileData.phoneNumber
+      };
+      
+      setUser(updatedUser);
+      setSaveSuccess('Profile updated successfully!');
+      setTimeout(() => setSaveSuccess(''), 3000);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to update profile.');
+    }
   };
 
-  const handlePasswordChange = (e) => {
+  const handlePasswordChange = async (e) => {
     e.preventDefault();
     setSaveSuccess('');
     setError('');
-
-    if (passwordState.newPassword.length < 6) {
-      setError('New password must be at least 6 characters.');
-      return;
-    }
 
     if (passwordState.newPassword !== passwordState.confirmPassword) {
       setError('New passwords do not match.');
       return;
     }
 
-    // Simulate saving password
-    setSaveSuccess('Password changed successfully!');
-    setPasswordState({
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
-    });
-    setTimeout(() => setSaveSuccess(''), 3000);
+    try {
+      await api.put('/auth/change-password', {
+        currentPassword: passwordState.currentPassword,
+        newPassword: passwordState.newPassword,
+        confirmPassword: passwordState.confirmPassword
+      });
+
+      setSaveSuccess('Password changed successfully!');
+      setPasswordState({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+      setTimeout(() => setSaveSuccess(''), 3000);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to change password. Make sure it contains uppercase, lowercase, number, and special character.');
+    }
   };
 
   return (
@@ -249,15 +292,15 @@ export const Profile = () => {
                 <h4 style={{ fontSize: '16px', marginBottom: '16px' }}>📦 Recent Checkouts</h4>
                 {recentOrders.length > 0 ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {recentOrders.map((o) => (
-                      <div key={o.orderId} className="flex justify-between align-center" style={{ padding: '12px', background: 'var(--bg-main)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
+                    {recentOrders.map((o, idx) => (
+                      <div key={`${o.order_id}-${idx}`} className="flex justify-between align-center" style={{ padding: '12px', background: 'var(--bg-main)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
                         <div>
-                          <span style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{o.orderId}</span>
-                          <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '12px' }}>{o.date}</span>
+                          <span style={{ fontFamily: 'monospace', fontWeight: 'bold' }}>{o.order_id}</span>
+                          <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '12px' }}>{o.order_date ? new Date(o.order_date).toLocaleDateString() : o.createdAt ? new Date(o.createdAt).toLocaleDateString() : ''}</span>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <span style={{ fontWeight: '700' }}>${o.total.toFixed(2)}</span>
-                          <Link to={`/orders/${o.orderId}`} style={{ fontSize: '13px', color: 'var(--accent)', fontWeight: '600' }}>Details →</Link>
+                          <span style={{ fontWeight: '700' }}>₹{(o.total_price || o.totalAmount || 0).toFixed(2)}</span>
+                          <span style={{ fontSize: '12px', color: (o.order_status || o.status) === 'SUCCESS' ? 'var(--success)' : 'var(--warning)', fontWeight: 'bold', marginLeft: '6px' }}>{o.order_status || o.status}</span>
                         </div>
                       </div>
                     ))}

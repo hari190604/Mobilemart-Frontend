@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
+import api from '../services/api';
 
 export const Checkout = () => {
   const { cartItems, cartTotal, clearCart } = useCart();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   // Address parameters
   const [address, setAddress] = useState({
@@ -37,44 +39,114 @@ export const Checkout = () => {
   const shippingCost = cartTotal > 500 ? 0.00 : 10.00;
   const grandTotal = cartTotal + shippingCost;
 
-  const handlePlaceOrder = (e) => {
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handlePlaceOrder = async (e) => {
     e.preventDefault();
     setLoading(true);
 
-    const generatedOrderId = 'MM-' + Math.floor(100000 + Math.random() * 900000);
-    const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    try {
+      // 1. Create Address
+      const addressPayload = {
+        fullName: user?.name || 'Customer',
+        mobileNumber: user?.phoneNumber || '+1234567890',
+        streetAddress: address.street,
+        city: address.city,
+        state: address.state,
+        postalCode: address.zipCode,
+        country: address.country,
+        isDefault: true
+      };
 
-    const orderPayload = {
-      orderId: generatedOrderId,
-      date: dateStr,
-      items: [...cartItems],
-      total: grandTotal,
-      shippingAddress: { ...address },
-      paymentMethod: paymentMethod,
-    };
+      const addressRes = await api.post('/addresses', addressPayload);
+      const addressId = addressRes.data.data.addressId;
 
-    setTimeout(() => {
+      // 2. Place Order
+      const orderRes = await api.post('/orders', { 
+        addressId: addressId,
+        paymentMethod: paymentMethod 
+      });
+      const placedOrder = orderRes.data.data;
+
+      // The backend will clear the cart eventually.
+      // We will only clear frontend cart for COD now, and for Online after payment verify succeeds.
+      
       if (paymentMethod === 'COD') {
-        // Cash on delivery - complete immediately
-        const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-        const finalOrder = {
-          ...orderPayload,
-          transactionId: 'COD_MM' + Math.random().toString(36).substring(2, 9).toUpperCase(),
-          status: 'PAID' // Mark as paid for local tracking
-        };
-        existingOrders.push(finalOrder);
-        localStorage.setItem('orders', JSON.stringify(existingOrders));
-
         clearCart();
-        setLoading(false);
-        navigate('/order-success', { state: { order: finalOrder } });
-      } else {
-        // Card or UPI - store as pending_order and go to /payment
-        localStorage.setItem('pending_order', JSON.stringify(orderPayload));
-        setLoading(false);
-        navigate('/payment');
+        placedOrder.isCOD = true;
+        localStorage.setItem('lastOrder', JSON.stringify(placedOrder));
+        window.open('/payment-success', '_blank');
+        navigate('/');
+        return;
       }
-    }, 1000);
+
+      const res = await loadRazorpayScript();
+      if (!res) {
+        alert('Razorpay SDK failed to load. Please check your internet connection.');
+        setLoading(false);
+        return;
+      }
+
+      const options = {
+        key: 'rzp_test_TKaXvvDaeNBx3Y',
+        amount: Math.round(placedOrder.totalAmount * 100),
+        currency: "INR",
+        name: "MobileMart",
+        description: "Secure Checkout",
+        order_id: placedOrder.razorpayOrderId,
+        handler: async function (response) {
+          setLoading(true);
+          try {
+            const verifyRes = await api.post('/orders/verify-payment', {
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature
+            });
+            
+            if (verifyRes.data && verifyRes.data.success) {
+              localStorage.setItem('lastOrder', JSON.stringify(verifyRes.data.data));
+              clearCart();
+            }
+            
+            setLoading(false);
+            navigate('/payment-success');
+          } catch (error) {
+            console.error("Verification failed", error);
+            setLoading(false);
+            navigate('/payment-failed');
+          }
+        },
+        prefill: {
+          name: user?.name || "Customer",
+          email: user?.email || "customer@example.com",
+          contact: user?.phoneNumber || "9999999999"
+        },
+        theme: {
+          color: "#3b82f6"
+        }
+      };
+
+      setLoading(false);
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.on('payment.failed', function (response){
+        console.error(response.error);
+        navigate('/payment-failed');
+      });
+      paymentObject.open();
+    } catch (error) {
+      console.error("Failed to place order", error);
+      alert(error.response?.data?.message || error.message || "Failed to place order.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -215,7 +287,7 @@ export const Checkout = () => {
                   <div style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '180px' }}>
                     {item.quantity}x {item.name}
                   </div>
-                  <span style={{ fontWeight: '600' }}>${(item.price * item.quantity).toFixed(2)}</span>
+                  <span style={{ fontWeight: '600' }}>₹{(item.price * item.quantity).toFixed(2)}</span>
                 </div>
               ))}
             </div>
@@ -226,11 +298,11 @@ export const Checkout = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '14px' }}>
               <div className="flex justify-between">
                 <span className="text-muted">Subtotal</span>
-                <span>${cartTotal.toFixed(2)}</span>
+                <span>₹{cartTotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted">Shipping</span>
-                <span>{shippingCost === 0 ? 'FREE' : `$${shippingCost.toFixed(2)}`}</span>
+                <span>{shippingCost === 0 ? 'FREE' : `₹${shippingCost.toFixed(2)}`}</span>
               </div>
             </div>
 
@@ -238,7 +310,7 @@ export const Checkout = () => {
 
             <div className="flex justify-between" style={{ fontSize: '18px', fontWeight: '800' }}>
               <span>Total cost</span>
-              <span>${grandTotal.toFixed(2)}</span>
+              <span>₹{grandTotal.toFixed(2)}</span>
             </div>
 
             <button 

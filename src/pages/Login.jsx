@@ -104,7 +104,7 @@ export const Login = () => {
       // Redirect to Home page after successful login
       navigate('/');
     } catch (err) {
-      setBackendError(err.message || 'Login failed. Please verify credentials.');
+      setBackendError(err.response.data.message||err.message || 'Login failed. Please verify credentials.');
     } finally {
       setLoading(false);
     }
