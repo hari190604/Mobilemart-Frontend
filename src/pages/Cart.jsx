@@ -45,7 +45,15 @@ export const Cart = () => {
                   <div className="cart-item-details">
                     <span className="cart-item-brand">{item.brand}</span>
                     <h3 className="cart-item-name">{item.name}</h3>
-                    <span className="cart-item-price">Unit: ${item.price.toFixed(2)}</span>
+                    <span className="cart-item-price" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      Unit: ₹{item.price.toFixed(2)}
+                      <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)', fontSize: '12px' }}>
+                        ₹{(item.price / (1 - [15, 23, 27][(item.id || 0) % 3] / 100)).toFixed(2)}
+                      </span>
+                      <span style={{ color: '#10b981', fontSize: '11px', fontWeight: 'bold' }}>
+                        ({[15, 23, 27][(item.id || 0) % 3]}% OFF)
+                      </span>
+                    </span>
                   </div>
                 </div>
 
@@ -72,7 +80,7 @@ export const Cart = () => {
 
                   {/* Calculations */}
                   <div className="item-total-price">
-                    ${(item.price * item.quantity).toFixed(2)}
+                    ₹{(item.price * item.quantity).toFixed(2)}
                   </div>
 
                   {/* Trash delete */}
@@ -107,7 +115,7 @@ export const Cart = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '15px' }}>
 <div className="summary-row">
                 <span className="text-muted">Subtotal Items</span>
-                <span style={{ fontWeight: '650' }}>${cartTotal.toFixed(2)}</span>
+                <span style={{ fontWeight: '650' }}>₹{cartTotal.toFixed(2)}</span>
               </div>
               <div className="summary-row">
                 <span className="text-muted">Estimated Shipping</span>
@@ -115,12 +123,12 @@ export const Cart = () => {
                   {shippingCost === 0 ? (
                     <span style={{ color: 'var(--success)' }}>FREE</span>
                   ) : (
-                    `$${shippingCost.toFixed(2)}`
+                    `₹${shippingCost.toFixed(2)}`
                   )}
                 </span>
               </div>
               <div style={{ fontSize: '12px', color: 'var(--text-muted)', textAlign: 'right', marginTop: '-8px' }}>
-                (Free shipping for order amounts over $500.00)
+                (Free shipping for order amounts over ₹500.00)
               </div>
             </div>
 
@@ -128,7 +136,7 @@ export const Cart = () => {
 
             <div className="summary-row total">
               <span>Total Price</span>
-              <span>${grandTotal.toFixed(2)}</span>
+              <span>₹{grandTotal.toFixed(2)}</span>
             </div>
 
             <button 

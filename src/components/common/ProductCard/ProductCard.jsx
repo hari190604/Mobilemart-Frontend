@@ -1,71 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
+import { useCart } from '../../../contexts/CartContext';
 import './ProductCard.css';
 
 export const ProductCard = ({ product, onAddToCart }) => {
-  const [isWishlisted, setIsWishlisted] = useState(() => {
-    if (!product) return false;
-    try {
-      const saved = localStorage.getItem('mobilemart_wishlist');
-      const wishlist = saved ? JSON.parse(saved) : [];
-      return wishlist.includes(product.id);
-    } catch {
-      return false;
-    }
-  });
-
+  const { wishlistItems, toggleWishlist, cartItems, removeFromCart } = useCart();
   const productId = product?.id;
-
-  // Listen to changes from other cards/pages for the same product id
-  useEffect(() => {
-    if (!productId) return;
-    const syncWishlistState = () => {
-      try {
-        const saved = localStorage.getItem('mobilemart_wishlist');
-        const wishlist = saved ? JSON.parse(saved) : [];
-        setIsWishlisted(wishlist.includes(productId));
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    window.addEventListener('wishlist-updated', syncWishlistState);
-    return () => window.removeEventListener('wishlist-updated', syncWishlistState);
-  }, [productId]);
+  
+  const isWishlisted = wishlistItems?.includes(productId);
+  const isInCart = cartItems?.some(item => item.id === productId);
 
   if (!product) return null;
-
-  // Calculate simulated 15% discount pricing
-  const originalPrice = product.price * 1.15;
-  const discountPercentage = 15;
 
   const handleWishlistToggle = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    setIsWishlisted((prev) => {
-      const next = !prev;
-      try {
-        const saved = localStorage.getItem('mobilemart_wishlist');
-        let wishlist = saved ? JSON.parse(saved) : [];
-        if (next) {
-          if (!wishlist.includes(product.id)) {
-            wishlist.push(product.id);
-          }
-        } else {
-          wishlist = wishlist.filter((id) => id !== product.id);
-        }
-        localStorage.setItem('mobilemart_wishlist', JSON.stringify(wishlist));
-        window.dispatchEvent(new Event('wishlist-updated'));
-      } catch (err) {
-        console.error('Error saving wishlist state:', err);
-      }
-      return next;
-    });
+    if (productId) {
+      toggleWishlist(productId);
+    }
   };
 
   const handleAddClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (onAddToCart) {
+    if (isInCart) {
+      removeFromCart(productId);
+    } else if (onAddToCart) {
       onAddToCart(product);
     }
   };
@@ -77,7 +37,6 @@ export const ProductCard = ({ product, onAddToCart }) => {
       
       {/* Badges Container */}
       <div className="product-card-badges-container">
-        <span className="card-discount-tag">{discountPercentage}% OFF</span>
         <span className={`card-stock-tag ${isInStock ? 'in-stock' : 'out-of-stock'}`}>
           {isInStock ? 'In Stock' : 'Out of Stock'}
         </span>
@@ -125,9 +84,14 @@ export const ProductCard = ({ product, onAddToCart }) => {
         </div>
 
         {/* Pricing Layout */}
-        <div className="product-card-price-overlay">
-          <span className="product-card-price-current">${product.price.toFixed(0)}</span>
-          <span className="product-card-price-crossed">${originalPrice.toFixed(0)}</span>
+        <div className="product-card-price-overlay" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span className="product-card-price-current">₹{product.price.toFixed(0)}</span>
+          <span style={{ textDecoration: 'line-through', color: 'var(--text-muted)', fontSize: '13px' }}>
+            ₹{(product.price / (1 - [15, 23, 27][(product.id || 0) % 3] / 100)).toFixed(0)}
+          </span>
+          <span style={{ color: '#10b981', fontSize: '12px', fontWeight: 'bold' }}>
+            {[15, 23, 27][(product.id || 0) % 3]}% OFF
+          </span>
         </div>
 
         {/* Buying Button rows */}
@@ -137,9 +101,9 @@ export const ProductCard = ({ product, onAddToCart }) => {
             type="button" 
             className="product-card-btn-action add-cart"
             onClick={handleAddClick}
-            disabled={!isInStock}
+            disabled={!isInStock && !isInCart}
           >
-            {isInStock ? '🛒 Add' : 'Out of Stock'}
+            {isInCart ? '🗑️ Remove' : (isInStock ? '🛒 Add' : 'Out of Stock')}
           </button>
 
           <Link 

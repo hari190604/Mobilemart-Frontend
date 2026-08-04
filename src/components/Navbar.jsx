@@ -3,25 +3,35 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { Search } from './common/Search/Search';
+import api from '../services/api';
 import './Navbar.css';
 
 export const Navbar = () => {
   const { user, logout, isAdmin } = useAuth();
-  const { cartCount } = useCart();
+  const { cartCount, wishlistItems } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [theme, setTheme] = useState('light');
   const [scrolled, setScrolled] = useState(false);
-  const [wishlistCount, setWishlistCount] = useState(() => {
-    try {
-      const saved = localStorage.getItem('mobilemart_wishlist');
-      const wishlist = saved ? JSON.parse(saved) : [];
-      return wishlist.length;
-    } catch {
-      return 0;
-    }
-  });
+  
+  const wishlistCount = wishlistItems ? wishlistItems.length : 0;
+  
   const navigate = useNavigate();
   const location = useLocation();
+
+  const [categoriesList, setCategoriesList] = useState([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await api.get('/public/categories');
+        const items = response.data.data || [];
+        setCategoriesList(items);
+      } catch (err) {
+        console.error("Failed to load categories for navbar", err);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   // Load and apply theme
   useEffect(() => {
@@ -48,20 +58,7 @@ export const Navbar = () => {
     setMobileMenuOpen(false);
   }, [location]);
 
-  // Synchronize wishlist count dynamically
-  useEffect(() => {
-    const handleWishlistUpdate = () => {
-      try {
-        const saved = localStorage.getItem('mobilemart_wishlist');
-        const wishlist = saved ? JSON.parse(saved) : [];
-        setWishlistCount(wishlist.length);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    window.addEventListener('wishlist-updated', handleWishlistUpdate);
-    return () => window.removeEventListener('wishlist-updated', handleWishlistUpdate);
-  }, []);
+  // Removed localStorage sync for wishlist since it's now handled by CartContext
 
   const toggleTheme = () => {
     const nextTheme = theme === 'light' ? 'dark' : 'light';
@@ -110,18 +107,20 @@ export const Navbar = () => {
                 Categories <span className="dropdown-icon">▼</span>
               </span>
               <div className="dropdown-menu">
-                <Link to="/products?category=Smartphones" className="dropdown-item">
-                  <span className="dropdown-item-icon">📱</span> Smartphones
-                </Link>
-                <Link to="/products?category=Wearables" className="dropdown-item">
-                  <span className="dropdown-item-icon">⌚</span> Wearables
-                </Link>
-                <Link to="/products?category=Accessories" className="dropdown-item">
-                  <span className="dropdown-item-icon">🔌</span> Accessories
-                </Link>
-                <Link to="/products?category=Tablets" className="dropdown-item">
-                  <span className="dropdown-item-icon">📁</span> Tablets
-                </Link>
+                {categoriesList.map(cat => {
+                  const categoryName = cat.categoryName || '';
+                  const catNameLower = categoryName.toLowerCase();
+                  let icon = '📦';
+                  if (catNameLower.includes('smartphone') || catNameLower.includes('phone') || catNameLower.includes('mobile')) icon = '📱';
+                  else if (catNameLower.includes('wearable') || catNameLower.includes('watch')) icon = '⌚';
+                  else if (catNameLower.includes('access') || catNameLower.includes('audio')) icon = '🔌';
+                  else if (catNameLower.includes('tablet') || catNameLower.includes('pad')) icon = '📁';
+                  return (
+                    <Link key={cat.categoryId} to={`/products?category=${encodeURIComponent(categoryName)}`} className="dropdown-item">
+                      <span className="dropdown-item-icon">{icon}</span> {categoryName}
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           </nav>
@@ -265,10 +264,20 @@ export const Navbar = () => {
               <span>Categories</span> <span>📁</span>
             </div>
             <div className="mobile-categories-group">
-              <Link to="/products?category=Smartphones" className="mobile-category-link">📱 Smartphones</Link>
-              <Link to="/products?category=Wearables" className="mobile-category-link">⌚ Wearables</Link>
-              <Link to="/products?category=Accessories" className="mobile-category-link">🔌 Accessories</Link>
-              <Link to="/products?category=Tablets" className="mobile-category-link">📁 Tablets</Link>
+              {categoriesList.map(cat => {
+                  const categoryName = cat.categoryName || '';
+                  const catNameLower = categoryName.toLowerCase();
+                  let icon = '📦';
+                  if (catNameLower.includes('smartphone') || catNameLower.includes('phone') || catNameLower.includes('mobile')) icon = '📱';
+                  else if (catNameLower.includes('wearable') || catNameLower.includes('watch')) icon = '⌚';
+                  else if (catNameLower.includes('access') || catNameLower.includes('audio')) icon = '🔌';
+                  else if (catNameLower.includes('tablet') || catNameLower.includes('pad')) icon = '📁';
+                  return (
+                    <Link key={cat.categoryId} to={`/products?category=${encodeURIComponent(categoryName)}`} className="mobile-category-link" onClick={() => setMobileMenuOpen(false)}>
+                      {icon} {categoryName}
+                    </Link>
+                  );
+              })}
             </div>
           </div>
 

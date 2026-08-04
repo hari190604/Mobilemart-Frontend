@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
+import api from '../services/api';
 
 export const Payment = () => {
   const navigate = useNavigate();
@@ -69,52 +70,80 @@ export const Payment = () => {
     }
   };
 
-  const processTransaction = (e) => {
-    e.preventDefault();
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const processTransaction = async (e) => {
+    if (e) e.preventDefault();
+    
+    if (pendingOrder.paymentMethod === 'COD') {
+      localStorage.removeItem('pending_order');
+      clearCart();
+      navigate('/payment-success');
+      return;
+    }
+
     setLoading(true);
+    setLoaderMessage('Initializing Secure Razorpay Checkout...');
     
-    // Loading stages animation simulation
-    setLoaderMessage('Establishing secure 256-bit SSL handshake...');
-    
-    setTimeout(() => {
-      setLoaderMessage('Verifying billing credentials with card network...');
-      
-      setTimeout(() => {
-        setLoaderMessage('Securing transaction fund authorization...');
-        
-        setTimeout(() => {
-          // Checkout logic checks
-          const isUpiFailed = pendingOrder.paymentMethod === 'UPI' && upiVpa.toLowerCase() === 'fail@upi';
-          const isCardFailed = pendingOrder.paymentMethod === 'CARD' && cardDetails.cvv === '000';
+    const res = await loadRazorpayScript();
+    if (!res) {
+      alert('Razorpay SDK failed to load. Please check your internet connection.');
+      setLoading(false);
+      return;
+    }
+
+    const options = {
+      key: 'rzp_test_TKaXvvDaeNBx3Y', // Provided from backend config
+      amount: Math.round(pendingOrder.total * 100), // Amount in paise
+      currency: "INR",
+      name: "MobileMart",
+      description: "Secure Checkout",
+      order_id: pendingOrder.razorpayOrderId,
+      handler: async function (response) {
+        setLoaderMessage('Verifying payment signature...');
+        setLoading(true);
+        try {
+          await api.post('/orders/verify-payment', {
+            razorpayOrderId: response.razorpay_order_id,
+            razorpayPaymentId: response.razorpay_payment_id,
+            razorpaySignature: response.razorpay_signature
+          });
           
-          if (isUpiFailed || isCardFailed) {
-            setLoading(false);
-            navigate('/payment-failed');
-          } else {
-            // Success checkout
-            const generatedTxnId = 'TXN_MM' + Math.random().toString(36).substring(2, 9).toUpperCase();
-            const finalOrder = {
-              ...pendingOrder,
-              transactionId: generatedTxnId,
-              status: 'PAID',
-              date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-            };
-            
-            // Append to orders database list
-            const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-            existingOrders.push(finalOrder);
-            localStorage.setItem('orders', JSON.stringify(existingOrders));
-            
-            // Clean pending caches and clear active shopping bag items
-            localStorage.removeItem('pending_order');
-            clearCart();
-            
-            setLoading(false);
-            navigate('/payment-success');
-          }
-        }, 1000);
-      }, 1000);
-    }, 1000);
+          localStorage.removeItem('pending_order');
+          clearCart();
+          setLoading(false);
+          navigate('/payment-success');
+        } catch (error) {
+          console.error("Verification failed", error);
+          setLoading(false);
+          navigate('/payment-failed');
+        }
+      },
+      prefill: {
+        name: cardDetails.name || "Customer",
+        email: "customer@example.com",
+        contact: "9999999999"
+      },
+      theme: {
+        color: "#3b82f6"
+      }
+    };
+
+    setLoading(false);
+    const paymentObject = new window.Razorpay(options);
+    paymentObject.on('payment.failed', function (response){
+      console.error(response.error);
+      navigate('/payment-failed');
+    });
+    paymentObject.open();
   };
 
   return (

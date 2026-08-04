@@ -121,14 +121,9 @@ export const Register = () => {
       return;
     }
 
-    // Split Full Name into firstName and lastName for database context seeder
-    const nameParts = formData.fullName.trim().split(' ');
-    const firstName = nameParts[0] || '';
-    const lastName = nameParts.slice(1).join(' ') || '';
-
     try {
       setLoading(true);
-      await register(formData.email, formData.password, firstName, lastName, formData.phoneNumber);
+      await register(formData.email, formData.password, formData.fullName, formData.phoneNumber, formData.confirmPassword);
       setSuccessAlert('Account created successfully! Redirecting to login page...');
       
       // Delay navigation to let the user review confirmation
@@ -136,8 +131,13 @@ export const Register = () => {
         navigate('/login');
       }, 1800);
     } catch (err) {
-      setErrorAlert(err.message || 'Registration failed. Please check credentials or network.');
-    } finally {
+const errorMessage =
+    err?.response?.data?.message ||
+    err?.message ||
+    "Registration failed. Please try again.";
+
+  setErrorAlert(errorMessage);    
+} finally {
       setLoading(false);
     }
   };
@@ -153,12 +153,13 @@ export const Register = () => {
         </Link>
 
         <h2 className="register-heading">Create Account</h2>
-        <p className="register-subheading">Join MobileMart and access modern e-commerce flagships deals.</p>
+        <p className="register-subheading">Join MobileMart and access modern e-commerce flagships deals</p>
 
         {/* Global feedbacks */}
         {errorAlert && (
           <div className="register-alert-danger" role="alert">
-            <span>⚠️</span> {errorAlert}
+            <span>⚠️</span> 
+            <p className='error_alert_tag'>{errorAlert}</p>
           </div>
         )}
 

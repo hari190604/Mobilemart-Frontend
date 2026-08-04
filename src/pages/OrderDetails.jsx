@@ -1,14 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import api from '../services/api';
 
 export const OrderDetails = () => {
   const { id } = useParams();
   const [order, setOrder] = useState(null);
 
   useEffect(() => {
-    const savedOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-    const matched = savedOrders.find((o) => o.orderId === id);
-    setOrder(matched);
+    const fetchOrder = async () => {
+      try {
+        const response = await api.get('/orders');
+        if (response.data && response.data.success) {
+          const orders = response.data.data.content || [];
+          const matched = orders.find((o) => o.orderId === id);
+          setOrder(matched);
+        }
+      } catch (error) {
+        console.error("Failed to fetch order details", error);
+      }
+    };
+    fetchOrder();
   }, [id]);
 
   if (!order) {
@@ -154,12 +165,12 @@ export const OrderDetails = () => {
                       <span style={{ fontSize: '11px', color: 'var(--accent)', fontWeight: '700', textTransform: 'uppercase' }}>{item.brand}</span>
                       <h4 style={{ fontSize: '15px', fontWeight: '600' }}>{item.name}</h4>
                       <span className="text-muted" style={{ fontSize: '13px' }}>
-                        Qty: {item.quantity} x ${item.price.toFixed(2)}
+                        Qty: {item.quantity} x ₹{item.price.toFixed(2)}
                       </span>
                     </div>
                   </div>
                   <div style={{ fontWeight: '700', fontSize: '16px' }}>
-                    ${(item.price * item.quantity).toFixed(2)}
+                    ₹{(item.price * item.quantity).toFixed(2)}
                   </div>
                 </div>
               ))}
@@ -200,16 +211,16 @@ export const OrderDetails = () => {
             {/* Billing calculations */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '14px' }}>
               <div className="flex justify-between">
-                <span className="text-muted">Subtotal Items</span>
-                <span>${(order.total - (order.total > 500 ? 0 : 10)).toFixed(2)}</span>
+                <span className="text-muted">Subtotal</span>
+                <span>₹{(order.total - (order.total > 500 ? 0 : 10)).toFixed(2)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted">Estimated Shipping</span>
-                <span>{order.total > 500 ? 'FREE' : '$10.00'}</span>
+                <span className="text-muted">Shipping</span>
+                <span>{order.total > 500 ? 'FREE' : '₹10.00'}</span>
               </div>
-              <div className="flex justify-between" style={{ fontSize: '16px', fontWeight: '800', borderTop: '1px solid var(--border)', paddingTop: '10px', marginTop: '4px' }}>
-                <span>Grand Total</span>
-                <span style={{ color: 'var(--text-main)' }}>${order.total.toFixed(2)}</span>
+              <div className="flex justify-between" style={{ fontSize: '18px', fontWeight: '800', marginTop: '8px' }}>
+                <span>Final Billed Amount</span>
+                <span style={{ color: 'var(--text-main)' }}>₹{order.total.toFixed(2)}</span>
               </div>
             </div>
 

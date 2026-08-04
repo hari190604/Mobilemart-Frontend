@@ -7,7 +7,7 @@ export const RootLayout = () => {
   return (
     <>
       <Navbar />
-      <main className="container flex-col" style={{ minHeight: 'calc(100vh - var(--nav-height) - var(--footer-height) - 100px)' }}>
+      <main className="container flex-col" style={{ minHeight: 'calc(100vh - var(--nav-height))' }}>
         <Outlet />
       </main>
       <Footer />
