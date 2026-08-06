@@ -30,13 +30,36 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const response = await api.post('/auth/login', { identifier:email, password });
-    const { token, userId, username, role } = response?.data?.data;
-    const userData = { id: userId, email, name: username, role: role };
     
+    const backendUser = response?.data?.data?.user || {};
+    const actualToken = response?.data?.data?.token || response?.data?.data?.accessToken;
+    
+    // Map with a fallback for backwards compatibility
+    const actualRole = backendUser.role || response?.data?.data?.role;
+    const userData = { 
+      id: backendUser.userId || response?.data?.data?.userId, 
+      email, 
+      name: backendUser.username || response?.data?.data?.username, 
+      role: actualRole 
+    };
+    
+    // Setup Local Profiles
     localStorage.setItem('user', JSON.stringify(userData));
-    localStorage.setItem('token', token);
+    localStorage.setItem('optinova_user', JSON.stringify(userData));
+    
+    localStorage.setItem('token', actualToken);
+    localStorage.setItem('optinova_token', actualToken);
+    
+    localStorage.setItem('role', actualRole);
+    localStorage.setItem('optinova_role', actualRole);
+    
+    // Cookie mapping for session integrity 
+    document.cookie = `authToken=${actualToken}; path=/; max-age=86400; SameSite=Lax`;
+    document.cookie = `token=${actualToken}; path=/; max-age=86400; SameSite=Lax`;
+    document.cookie = `role=${actualRole}; path=/; max-age=86400; SameSite=Lax`;
+
     setUser(userData);
-    setToken(token);
+    setToken(actualToken);
     return userData;
   };
 
@@ -56,15 +79,73 @@ export const AuthProvider = ({ children }) => {
   };
 
   const verifyOtp = async (email, otp) => {
-    const response = await api.post('/auth/verify-otp', { email, otp });
+    const response = await api.post('/auth/verify-otp', { identifier: email, otp });
+    
+    if (response?.data?.data?.user) {
+        const backendUser = response.data.data.user;
+        const actualToken = response.data.data.token || response.data.data.accessToken;
+        const actualRole = backendUser.role || response.data.data.role;
+        
+        const userData = { 
+          id: backendUser.userId || response.data.data.userId, 
+          email: backendUser.email || email, 
+          name: backendUser.username || response.data.data.username, 
+          role: actualRole 
+        };
+        
+        localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem('optinova_user', JSON.stringify(userData));
+        
+        localStorage.setItem('token', actualToken);
+        localStorage.setItem('optinova_token', actualToken);
+        
+        localStorage.setItem('role', actualRole);
+        localStorage.setItem('optinova_role', actualRole);
+        
+        document.cookie = `authToken=${actualToken}; path=/; max-age=86400; SameSite=Lax`;
+        document.cookie = `token=${actualToken}; path=/; max-age=86400; SameSite=Lax`;
+        document.cookie = `role=${actualRole}; path=/; max-age=86400; SameSite=Lax`;
+
+        setUser(userData);
+        setToken(actualToken);
+    }
+    
     return response.data;
   };
 
-  const logout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    setUser(null);
-    setToken(null);
+  const forgotPassword = async (email) => {
+    const response = await api.post('/auth/forgot-password', { identifier: email });
+    return response.data;
+  };
+
+  const logout = async () => {
+    try {
+      if (token || localStorage.getItem('token')) {
+        await api.post('/auth/logout');
+      }
+    } catch (err) {
+      console.error('Logout API failed:', err);
+    } finally {
+      // LocalStorage purge
+      localStorage.removeItem('user');
+      localStorage.removeItem('optinova_user');
+      
+      localStorage.removeItem('token');
+      localStorage.removeItem('optinova_token');
+      
+      localStorage.removeItem('role');
+      localStorage.removeItem('optinova_role');
+      
+      localStorage.removeItem('mobilemart_wishlist');
+      
+      // Cookie invalidations explicitly via requirements
+      document.cookie = 'authToken=null; path=/; max-age=86400; SameSite=Lax';
+      document.cookie = 'token=null; path=/; max-age=86400; SameSite=Lax';
+      document.cookie = 'role=null; path=/; max-age=86400; SameSite=Lax';
+
+      setUser(null);
+      setToken(null);
+    }
   };
 
   const isAdmin = () => {
@@ -72,7 +153,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, token, loading, login, register, verifyOtp, logout, isAdmin }}>
+    <AuthContext.Provider value={{ user, setUser, token, loading, login, register, verifyOtp, forgotPassword, logout, isAdmin }}>
       {children}
     </AuthContext.Provider>
   );

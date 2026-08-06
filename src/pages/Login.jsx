@@ -5,7 +5,7 @@ import FormInput from '../components/common/FormInput';
 import './Login.css';
 
 export const Login = () => {
-  const { login } = useAuth();
+  const { login, forgotPassword } = useAuth();
   const navigate = useNavigate();
 
   // State variables
@@ -111,9 +111,24 @@ export const Login = () => {
   };
 
   // Placeholder actions
-  const handleForgotPassword = (e) => {
+  const handleForgotPassword = async (e) => {
     e.preventDefault();
-    alert('Mock Action: Refresher reset link has been mock-dispatched to: ' + (email || 'your email'));
+    setBackendError('');
+    
+    if (!email) {
+      setBackendError('Please enter your Email Address below to request a verification OTP.');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      await forgotPassword(email);
+      navigate(`/verify-otp?email=${encodeURIComponent(email)}`);
+    } catch (err) {
+      setBackendError(err?.response?.data?.message || err.message || 'Failed to dispatch verification email.');
+    } finally {
+      setLoading(false);
+    }
   };
 
 

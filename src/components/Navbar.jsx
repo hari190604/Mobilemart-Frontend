@@ -67,8 +67,8 @@ export const Navbar = () => {
     document.documentElement.setAttribute('data-theme', nextTheme);
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/login');
     setMobileMenuOpen(false);
   };
