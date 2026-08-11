@@ -81,7 +81,7 @@ function App() {
               <Route 
                 path="checkout" 
                 element={
-                  <ProtectedRoute allowedRoles={['CUSTOMER', 'ADMIN']}>
+                  <ProtectedRoute allowedRoles={['CUSTOMER']}>
                     <Checkout />
                   </ProtectedRoute>
                 } 
@@ -89,7 +89,7 @@ function App() {
               <Route 
                 path="payment" 
                 element={
-                  <ProtectedRoute allowedRoles={['CUSTOMER', 'ADMIN']}>
+                  <ProtectedRoute allowedRoles={['CUSTOMER']}>
                     <Payment />
                   </ProtectedRoute>
                 } 
@@ -97,7 +97,7 @@ function App() {
               <Route 
                 path="orders" 
                 element={
-                  <ProtectedRoute allowedRoles={['CUSTOMER', 'ADMIN']}>
+                  <ProtectedRoute allowedRoles={['CUSTOMER']}>
                     <Orders />
                   </ProtectedRoute>
                 } 
@@ -105,7 +105,7 @@ function App() {
               <Route 
                 path="profile" 
                 element={
-                  <ProtectedRoute allowedRoles={['CUSTOMER', 'ADMIN']}>
+                  <ProtectedRoute allowedRoles={['CUSTOMER']}>
                     <Profile />
                   </ProtectedRoute>
                 } 
@@ -113,7 +113,7 @@ function App() {
               <Route 
                 path="order-success" 
                 element={
-                  <ProtectedRoute allowedRoles={['CUSTOMER', 'ADMIN']}>
+                  <ProtectedRoute allowedRoles={['CUSTOMER']}>
                     <OrderSuccess />
                   </ProtectedRoute>
                 } 
@@ -121,7 +121,7 @@ function App() {
               <Route 
                 path="orders/:id" 
                 element={
-                  <ProtectedRoute allowedRoles={['CUSTOMER', 'ADMIN']}>
+                  <ProtectedRoute allowedRoles={['CUSTOMER']}>
                     <OrderDetails />
                   </ProtectedRoute>
                 } 
@@ -129,7 +129,7 @@ function App() {
               <Route 
                 path="payment-success" 
                 element={
-                  <ProtectedRoute allowedRoles={['CUSTOMER', 'ADMIN']}>
+                  <ProtectedRoute allowedRoles={['CUSTOMER']}>
                     <PaymentSuccess />
                   </ProtectedRoute>
                 } 
@@ -137,22 +137,24 @@ function App() {
               <Route 
                 path="payment-failed" 
                 element={
-                  <ProtectedRoute allowedRoles={['CUSTOMER', 'ADMIN']}>
+                  <ProtectedRoute allowedRoles={['CUSTOMER']}>
                     <PaymentFailed />
                   </ProtectedRoute>
                 } 
               />
 
-              {/* Admin Back-Office Panel - Requires Admin Badge */}
-              <Route 
-                path="admin" 
-                element={
-                  <ProtectedRoute allowedRoles={['ADMIN']}>
-                    <AdminDashboard />
-                  </ProtectedRoute>
-                } 
-              />
+              {/* Customer Accounts Guard - Requires Customer/Admin */}
             </Route>
+
+            {/* Admin Back-Office Panel - Dedicated Layout (Requires Admin Badge) */}
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute allowedRoles={['ADMIN']}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } 
+            />
 
             {/* Wildcard redirects back to home */}
             <Route path="*" element={<Navigate to="/" replace />} />

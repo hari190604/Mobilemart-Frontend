@@ -216,7 +216,7 @@ export const Payment = () => {
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ fontSize: '12px', fontWeight: '700', letterSpacing: '0.1em', opacity: 0.8 }}>SECURE DEBIT CARD</div>
-                  <div style={{ fontSize: '24px' }}>⚡</div>
+                  <img src="/mobilemart-logo.png" alt="Card Brand" style={{ height: '24px', filter: 'drop-shadow(0 0 5px rgba(168, 85, 247, 0.4))' }} />
                 </div>
 
                 <div style={{ fontSize: '22px', fontWeight: '600', letterSpacing: '0.15em', fontFamily: 'monospace', margin: '20px 0 10px 0' }}>

@@ -19,10 +19,20 @@ export const ProtectedRoute = ({ children, allowedRoles }) => {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Redirect if role is unauthorized
+  // Redirect if role is unauthorized against explicit permissions
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    // If standard customer attempts admin, block with unauthorized
+    // If Admin hits a customer page explicitly restricting them, route to /admin
+    if (user.role === 'ROLE_ADMIN' || user.role === 'ADMIN') {
+        return <Navigate to="/admin" replace />;
+    }
+    // Customers attempting Admin areas go to home
     return <Navigate to="/" replace />;
+  }
+
+  // If the route inherently has NO explicit allowedRoles (implicitly signifying a standard Customer view),
+  // proactively block Admin users to satisfy architectural segregation requirements.
+  if (!allowedRoles && (user.role === 'ROLE_ADMIN' || user.role === 'ADMIN')) {
+    return <Navigate to="/admin" replace />;
   }
 
   return children;

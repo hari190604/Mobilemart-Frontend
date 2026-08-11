@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { FormInput } from '../components/common/FormInput';
-import './Register.css';
+import './AuthCommon.css';
 
 export const Register = () => {
   const { register } = useAuth();
@@ -143,28 +143,29 @@ const errorMessage =
   };
 
   return (
-    <div className="register-page-wrapper">
-      <div className="register-card">
+    <div className="auth-page-wrapper">
+      <div className="auth-abstract-phone"></div>
+      
+      <div className="auth-card">
         
         {/* MobileMart Logo */}
-        <Link to="/" className="register-logo-container">
-          <div className="register-logo-icon">⚡</div>
-          <span className="register-logo-text">MobileMart</span>
+        <Link to="/" className="auth-logo-container brand-logo-container">
+          <img src="/mobilemart-logo.png" alt="MobileMart Logo" className="brand-logo-img" style={{ height: '72px', marginBottom: '16px' }} />
         </Link>
 
-        <h2 className="register-heading">Create Account</h2>
-        <p className="register-subheading">Join MobileMart and access modern e-commerce flagships deals</p>
+        <h2 className="auth-heading">Create Account</h2>
+        <p className="auth-subheading">Join MobileMart and start shopping smarter.</p>
 
         {/* Global feedbacks */}
         {errorAlert && (
-          <div className="register-alert-danger" role="alert">
+          <div className="auth-alert-danger" role="alert">
             <span>⚠️</span> 
-            <p className='error_alert_tag'>{errorAlert}</p>
+            <p className='error_alert_tag' style={{ margin:0 }}>{errorAlert}</p>
           </div>
         )}
 
         {successAlert && (
-          <div className="register-alert-success" role="alert">
+          <div className="auth-alert-success" role="alert">
             <span>✅</span> {successAlert}
           </div>
         )}
@@ -244,8 +245,7 @@ const errorMessage =
           {/* Submit register */}
           <button
             type="submit"
-            className="btn btn-primary"
-            style={{ width: '100%', padding: '14px', fontSize: '15px' }}
+            className="auth-primary-btn"
             disabled={loading}
           >
             {loading ? (
@@ -254,15 +254,15 @@ const errorMessage =
                 Creating Account...
               </>
             ) : (
-              'Register Now 🚀'
+              <>Create Account <span style={{fontSize: '18px', filter:'grayscale(1)'}}>→</span></>
             )}
           </button>
 
         </form>
 
-        <p className="text-muted text-sm font-sans" style={{ marginTop: '24px' }}>
+        <p className="auth-footer-text">
           Already have an account?{' '}
-          <Link to="/login" style={{ color: 'var(--accent)', fontWeight: 600, textDecoration: 'none' }}>
+          <Link to="/login">
             Sign In Here
           </Link>
         </p>

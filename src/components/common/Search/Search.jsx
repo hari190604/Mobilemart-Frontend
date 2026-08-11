@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { mockProducts } from '../../../utils/mockProducts';
+import api from '../../../services/api';
 import './Search.css';
 
 export const Search = ({ placeholder = "Search catalog...", onSearchSubmit }) => {
@@ -10,6 +10,20 @@ export const Search = ({ placeholder = "Search catalog...", onSearchSubmit }) =>
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [catalogCache, setCatalogCache] = useState([]);
+
+  useEffect(() => {
+    const fetchCatalog = async () => {
+      try {
+        const res = await api.get('/public/products?size=1000');
+        const items = res.data?.data?.content || res.data?.data || [];
+        setCatalogCache(items);
+      } catch (err) {
+        console.error("Search catalog ping failed", err);
+      }
+    };
+    fetchCatalog();
+  }, []);
 
   // Initialize recent searches from localStorage
   const [recentSearches, setRecentSearches] = useState(() => {
@@ -51,9 +65,9 @@ export const Search = ({ placeholder = "Search catalog...", onSearchSubmit }) =>
     setQuery(val);
 
     if (val.trim().length >= 2) {
-      const matched = mockProducts.filter(item =>
+      const matched = catalogCache.filter(item =>
         item.name.toLowerCase().includes(val.toLowerCase()) || 
-        item.brand.toLowerCase().includes(val.toLowerCase())
+        (item.category && item.category.categoryName.toLowerCase().includes(val.toLowerCase()))
       ).slice(0, 5);
       setSuggestions(matched);
     } else {
@@ -149,22 +163,22 @@ export const Search = ({ placeholder = "Search catalog...", onSearchSubmit }) =>
               <div className="search-suggestions-list">
                 {suggestions.map((item) => (
                   <div 
-                    key={item.id} 
+                    key={item.productId} 
                     className="search-suggestion-item-row"
                     onClick={() => handleSelectSuggestion(item.name)}
                   >
                     <div className="suggestion-item-thumbnail">
                       <img 
-                        src={item.imageUrl} 
+                        src={item.images && item.images.length > 0 ? item.images[0].imageUrl : 'https://via.placeholder.com/50'} 
                         alt={item.name} 
                         className="suggestion-item-thumbnail-img" 
                       />
                     </div>
                     <div className="suggestion-item-info">
                       <span className="suggestion-item-name">{item.name}</span>
-                      <span className="suggestion-item-brand">{item.brand}</span>
+                      <span className="suggestion-item-brand">{item.category?.categoryName || 'General'}</span>
                     </div>
-                    <span className="suggestion-item-price">${item.price.toFixed(0)}</span>
+                    <span className="suggestion-item-price">₹{item.price?.toLocaleString()}</span>
                   </div>
                 ))}
               </div>

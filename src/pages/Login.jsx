@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import FormInput from '../components/common/FormInput';
-import './Login.css';
+import './AuthCommon.css';
 
 export const Login = () => {
   const { login, forgotPassword } = useAuth();
   const navigate = useNavigate();
-
+  const location = useLocation();
+  const returnUrl = location.state?.from?.pathname + (location.state?.from?.hash || '') || '/';
   // State variables
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -90,7 +91,7 @@ export const Login = () => {
 
     try {
       setLoading(true);
-      await login(email, password);
+      const userData = await login(email, password);
 
       // Handle "Remember Me" persistence
       if (rememberMe) {
@@ -101,10 +102,14 @@ export const Login = () => {
         localStorage.setItem('mobilemart_remember_me', 'false');
       }
 
-      // Redirect to Home page after successful login
-      navigate('/');
+      // Route completely decoupled paths depending on Role
+      if (userData?.role === 'ROLE_ADMIN' || userData?.role === 'ADMIN') {
+        navigate('/admin', { replace: true });
+      } else {
+        navigate(returnUrl, { replace: true });
+      }
     } catch (err) {
-      setBackendError(err.response.data.message||err.message || 'Login failed. Please verify credentials.');
+      setBackendError(err.response?.data?.message || err.message || 'Login failed. Please verify credentials.');
     } finally {
       setLoading(false);
     }
@@ -131,24 +136,24 @@ export const Login = () => {
     }
   };
 
-
   return (
-    <div className="login-page-wrapper">
-      <div className="login-card">
+    <div className="auth-page-wrapper">
+      <div className="auth-abstract-phone"></div>
+      
+      <div className="auth-card">
         
         {/* MobileMart Logo */}
-        <Link to="/" className="login-logo-container">
-          <div className="login-logo-icon">⚡</div>
-          <span className="login-logo-text">Mobile<span style={{ color: 'var(--accent)' }}>Mart</span></span>
+        <Link to="/" className="auth-logo-container brand-logo-container">
+          <img src="/mobilemart-logo.png" alt="MobileMart Logo" className="brand-logo-img" style={{ height: '72px', marginBottom: '16px' }} />
         </Link>
 
         {/* Heading */}
-        <h2 className="login-heading">Welcome Back</h2>
-        <p className="login-subheading font-sans">Sign in to access your dashboard, orders, and cart assets.</p>
+        <h2 className="auth-heading">Welcome Back</h2>
+        <p className="auth-subheading">Sign in to access your dashboard, orders, and cart assets.</p>
 
         {/* Global validation / backend errors */}
         {backendError && (
-          <div className="login-alert-danger text-sm font-sans" role="alert">
+          <div className="auth-alert-danger" role="alert">
             <span>⚠️</span> {backendError}
           </div>
         )}
@@ -185,11 +190,10 @@ export const Login = () => {
           />
 
           {/* Remember Me and Forgot Password Group */}
-          <div className="form-helper-row font-sans">
-            <label className="remember-me-container">
+          <div className="auth-helper-row">
+            <label className="auth-remember-me">
               <input
                 type="checkbox"
-                className="remember-me-checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
               />
@@ -198,7 +202,7 @@ export const Login = () => {
             <a 
               href="#forgot-password" 
               onClick={handleForgotPassword} 
-              className="forgot-password-link"
+              className="auth-forgot-link"
             >
               Forgot Password?
             </a>
@@ -207,23 +211,22 @@ export const Login = () => {
           {/* Submit Button */}
           <button 
             type="submit" 
-            className="btn btn-primary"
-            style={{ width: '100%', padding: '12px', fontSize: '15px' }}
+            className="auth-primary-btn"
             disabled={loading}
           >
             {loading ? (
-              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+              <>
                 <span className="btn-loader"></span> Authenticating...
-              </span>
+              </>
             ) : (
-              'Sign In 🔑'
+              <>Sign In <span style={{fontSize: '18px', filter:'grayscale(1)'}}>→</span></>
             )}
           </button>
         </form>
 
         {/* Link to register page */}
-        <p className="text-muted text-sm font-sans" style={{ marginTop: '24px' }}>
-          Don't have an account? <Link to="/register" style={{ color: 'var(--accent)', fontWeight: '600' }}>Register Now</Link>
+        <p className="auth-footer-text">
+          Don't have an account? <Link to="/register">Register Now</Link>
         </p>
 
       </div>

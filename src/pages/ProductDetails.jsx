@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import api from '../services/api';
 import { inferBrandFromName } from '../utils/brandHelper';
@@ -10,6 +10,9 @@ export const ProductDetails = () => {
   const navigate = useNavigate();
   const cartContext = useCart();
   const { addToCart, cartItems, removeFromCart, toggleWishlist, wishlistItems } = cartContext;
+  
+  const location = useLocation();
+  const purchaseSectionRef = useRef(null);
 
   const [quantity, setQuantity] = useState(1);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -71,8 +74,17 @@ export const ProductDetails = () => {
   useEffect(() => {
     setActiveImageIndex(0);
     setQuantity(1);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [id]);
+    if (location.hash === '#purchase-section') {
+        setTimeout(() => {
+            purchaseSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Attempt to focus the quantity selector if possible
+            const qtyBtn = purchaseSectionRef.current?.querySelector('.qty-btn');
+            if (qtyBtn) qtyBtn.focus();
+        }, 300);
+    } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [id, location.hash, loading]);
 
   // Sync wishlist state from CartContext
   useEffect(() => {
@@ -260,9 +272,24 @@ export const ProductDetails = () => {
 
           <hr style={{ border: '0', borderTop: '1px solid var(--border)' }} />
 
+          {/* Premium Enterprise Assurance */}
+          <div style={{ display: 'flex', gap: '16px', background: 'rgba(255,255,255,0.03)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '4px' }}>🛡️ Enterprise Warranty</div>
+              <div style={{ fontSize: '14px', fontWeight: '700' }}>1 Year Global Coverage</div>
+            </div>
+            <div style={{ width: '1px', background: 'var(--border)' }}></div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '4px' }}>⚡ Express Delivery</div>
+              <div style={{ fontSize: '14px', fontWeight: '700' }}>Estimated By: {new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric'})}</div>
+            </div>
+          </div>
+
+          <hr style={{ border: '0', borderTop: '1px solid var(--border)' }} />
+
           {/* Action section */}
           {product.stockQuantity > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div id="purchase-section" ref={purchaseSectionRef} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               
               {/* Quantity selectors */}
               <div className="quantity-modifier-section">
@@ -303,7 +330,7 @@ export const ProductDetails = () => {
                   onClick={handleBuyNow}
                   className="btn-buy-now"
                 >
-                  ⚡ Buy Now
+                  🛍️ Buy Now
                 </button>
                 <button 
                   type="button" 

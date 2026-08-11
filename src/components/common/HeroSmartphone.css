@@ -1,0 +1,217 @@
+/* Hero Smartphone Precision CSS */
+.hero-sm-container {
+  position: relative;
+  width: 320px;
+  height: 480px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  perspective: 1000px;
+  z-index: 2;
+}
+
+.hero-phone-body {
+  width: 220px;
+  height: 450px;
+  background: linear-gradient(145deg, #1e293b, #0f172a);
+  border-radius: 44px;
+  position: relative;
+  box-shadow: 
+    -10px 10px 40px rgba(0, 0, 0, 0.7),
+    inset 2px 2px 5px rgba(255, 255, 255, 0.1),
+    inset -4px -4px 10px rgba(0, 0, 0, 0.5),
+    0 0 30px rgba(124, 58, 237, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 6px;
+  animation: heroFloat 6s ease-in-out infinite;
+  transform-style: preserve-3d;
+  transform: rotateY(-15deg) rotateX(10deg);
+}
+
+@keyframes heroFloat {
+  0%, 100% {
+    transform: rotateY(-15deg) rotateX(10deg) translateY(0);
+  }
+  50% {
+    transform: rotateY(-15deg) rotateX(10deg) translateY(-20px);
+  }
+}
+
+.hero-phone-frame {
+  width: 100%;
+  height: 100%;
+  background-color: #000;
+  border-radius: 38px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.05);
+}
+
+.hero-phone-screen {
+  position: absolute;
+  top: 4px; left: 4px; right: 4px; bottom: 4px;
+  background: linear-gradient(180deg, #0f172a 0%, #050816 100%);
+  border-radius: 34px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 12px;
+}
+
+.hero-screen-glow {
+  position: absolute;
+  top: -20%;
+  left: -20%;
+  width: 140%;
+  height: 140%;
+  background: radial-gradient(circle at center, rgba(59, 130, 246, 0.15) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.hero-screen-header {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  z-index: 10;
+}
+
+.hero-camera-island {
+  width: 70px;
+  height: 20px;
+  background: #000;
+  border-radius: 12px;
+  box-shadow: inset 0 -1px 2px rgba(255, 255, 255, 0.15);
+}
+
+.hero-screen-content {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 30px;
+  z-index: 2;
+}
+
+.blur-glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+}
+
+.screen-widget {
+  width: 100%;
+  height: 100px;
+  border-radius: 18px;
+  position: relative;
+  overflow: hidden;
+}
+.screen-widget::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(135deg, rgba(59,130,246,0.3) 0%, rgba(124,58,237,0.1) 100%);
+}
+
+.screen-row {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.screen-icon {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glow {
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+  animation: pulseGlow 3s infinite alternate;
+}
+.delay-1 { animation-delay: 1s; }
+.delay-2 { animation-delay: 2s; }
+
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.1); }
+  100% { box-shadow: 0 0 20px rgba(124, 58, 237, 0.4); }
+}
+
+.screen-card {
+  width: 100%;
+  background: rgba(30, 41, 59, 0.6);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.line {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+.line.title { width: 60%; background: rgba(59, 130, 246, 0.6); }
+.line.sub { width: 40%; }
+.line.sm { width: 80%; }
+
+.hero-screen-dock {
+  width: 90%;
+  height: 60px;
+  margin-bottom: 8px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 10px;
+  z-index: 10;
+}
+.dock-icon {
+  width: 34px;
+  height: 34px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+}
+
+/* Hardware buttons */
+.hero-btn-vol, .hero-btn-pwr {
+  position: absolute;
+  width: 3px;
+  background: #334155;
+  border-radius: 2px 0 0 2px;
+  box-shadow: inset -1px 0 2px rgba(0,0,0,0.5);
+}
+.hero-btn-vol.up { height: 30px; top: 120px; left: -3px; }
+.hero-btn-vol.down { height: 30px; top: 160px; left: -3px; }
+.hero-btn-pwr { height: 45px; top: 140px; right: -3px; border-radius: 0 2px 2px 0; }
+
+/* Reflective shadow on the floor */
+.hero-phone-shadow {
+  position: absolute;
+  bottom: 0px;
+  width: 160px;
+  height: 20px;
+  background: radial-gradient(ellipse at center, rgba(124, 58, 237, 0.3) 0%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(8px);
+  animation: shadowScale 6s ease-in-out infinite;
+  z-index: 1;
+}
+
+@keyframes shadowScale {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(0.6);
+    opacity: 0.3;
+  }
+}

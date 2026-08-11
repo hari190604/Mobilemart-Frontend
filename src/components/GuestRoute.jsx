@@ -13,8 +13,11 @@ export const GuestRoute = ({ children }) => {
     );
   }
 
-  // Redirect to Home if already authenticated
+  // Redirect actively authenticated users safely based on their strict role boundaries
   if (user) {
+    if (user.role === 'ROLE_ADMIN' || user.role === 'ADMIN') {
+      return <Navigate to="/admin" replace />;
+    }
     return <Navigate to="/" replace />;
   }
 

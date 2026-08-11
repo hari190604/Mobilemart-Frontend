@@ -18,7 +18,7 @@ export const Products = () => {
       try {
         const response = await api.get('/public/categories');
         const items = response.data.data || [];
-        setCategoriesList(items.map(c => c.categoryName));
+        setCategoriesList(items.map(c => c.categoryName).filter(name => name !== 'Camera Phones'));
       } catch (err) {
         console.error("Failed to load categories", err);
       }
@@ -70,7 +70,12 @@ export const Products = () => {
 
   // Sync state parameters when route search changes
   useEffect(() => {
-    setSelectedCategory(categoryParam);
+    if (categoryParam === 'Camera Phones') {
+      applyFilters('All', brandParam, searchParam);
+      setSelectedCategory('All');
+    } else {
+      setSelectedCategory(categoryParam);
+    }
     setSelectedBrand(brandParam);
     setSearchQuery(searchParam);
   }, [categoryParam, brandParam, searchParam]);

@@ -118,34 +118,27 @@ export const AuthProvider = ({ children }) => {
     return response.data;
   };
 
-  const logout = async () => {
-    try {
-      if (token || localStorage.getItem('token')) {
-        await api.post('/auth/logout');
-      }
-    } catch (err) {
-      console.error('Logout API failed:', err);
-    } finally {
-      // LocalStorage purge
-      localStorage.removeItem('user');
-      localStorage.removeItem('optinova_user');
-      
-      localStorage.removeItem('token');
-      localStorage.removeItem('optinova_token');
-      
-      localStorage.removeItem('role');
-      localStorage.removeItem('optinova_role');
-      
-      localStorage.removeItem('mobilemart_wishlist');
-      
-      // Cookie invalidations explicitly via requirements
-      document.cookie = 'authToken=null; path=/; max-age=86400; SameSite=Lax';
-      document.cookie = 'token=null; path=/; max-age=86400; SameSite=Lax';
-      document.cookie = 'role=null; path=/; max-age=86400; SameSite=Lax';
-
-      setUser(null);
-      setToken(null);
+  const logout = () => {
+    if (token || localStorage.getItem('token')) {
+      api.post('/auth/logout').catch(() => {});
     }
+
+    localStorage.removeItem('user');
+    localStorage.removeItem('optinova_user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('optinova_token');
+    localStorage.removeItem('role');
+    localStorage.removeItem('optinova_role');
+    localStorage.removeItem('mobilemart_wishlist');
+
+    document.cookie = 'authToken=null; path=/; max-age=0; SameSite=Lax';
+    document.cookie = 'token=null; path=/; max-age=0; SameSite=Lax';
+    document.cookie = 'role=null; path=/; max-age=0; SameSite=Lax';
+
+    setUser(null);
+    setToken(null);
+
+    window.location.href = '/login';
   };
 
   const isAdmin = () => {

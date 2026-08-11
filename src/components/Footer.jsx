@@ -19,9 +19,9 @@ export const Footer = () => {
         
         {/* About Us Column */}
         <div className="footer-column">
-          <Link to="/" className="footer-logo">
-            <span style={{ color: 'var(--accent)', fontSize: '28px' }}>⚡</span>
-            <span>Mobile<span style={{ color: 'var(--accent)' }}>Mart</span></span>
+          <Link to="/" className="footer-logo brand-logo-container" style={{ justifyContent: 'flex-start' }}>
+            <img src="/mobilemart-logo.png" alt="MobileMart Logo" className="brand-logo-img" style={{ height: '28px', marginRight: '8px' }} />
+            <span style={{ fontSize: '18px', fontWeight: '700', letterSpacing: '-0.3px', color: '#FFF' }}>Mobile<span style={{ color: 'var(--primary)' }}>Mart</span></span>
           </Link>
           <p className="footer-about-text">
             Your premium destination for high-end smartphones, wearable tech, and premium accessories. We deliver unmatched quality, verified products, and stellar support worldwide.

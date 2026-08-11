@@ -21,18 +21,21 @@
   align-items: center;
   justify-content: space-between;
   padding: 20px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-md);
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   flex-wrap: wrap;
   gap: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
 }
 
 .cart-item-row:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
-  border-color: var(--accent);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  border-color: rgba(59, 130, 246, 0.5);
 }
 
 .cart-item-media {
@@ -177,17 +180,18 @@
 }
 
 .summary-card {
-  padding: 24px;
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-md);
+  padding: 32px;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
   gap: 20px;
   position: sticky;
   top: 90px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.4);
 }
 
 .summary-title {

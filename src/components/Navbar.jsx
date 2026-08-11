@@ -3,15 +3,25 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { Search } from './common/Search/Search';
+import { MiniCart } from './common/MiniCart/MiniCart';
 import api from '../services/api';
 import './Navbar.css';
 
 export const Navbar = () => {
   const { user, logout, isAdmin } = useAuth();
-  const { cartCount, wishlistItems } = useCart();
+  const { cartCount, wishlistItems, openCartDrawer } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [theme, setTheme] = useState('light');
   const [scrolled, setScrolled] = useState(false);
+  const [popBadge, setPopBadge] = useState(false);
+  
+  useEffect(() => {
+    if (cartCount > 0) {
+      setPopBadge(true);
+      const timer = setTimeout(() => setPopBadge(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [cartCount]);
   
   const wishlistCount = wishlistItems ? wishlistItems.length : 0;
   
@@ -25,7 +35,7 @@ export const Navbar = () => {
       try {
         const response = await api.get('/public/categories');
         const items = response.data.data || [];
-        setCategoriesList(items);
+        setCategoriesList(items.filter(c => c.categoryName !== 'Camera Phones'));
       } catch (err) {
         console.error("Failed to load categories for navbar", err);
       }
@@ -81,9 +91,9 @@ export const Navbar = () => {
         <div className="navbar-container">
           
           {/* Logo Element */}
-          <Link to="/" className="navbar-logo">
-            <div className="logo-icon">⚡</div>
-            <span>Mobile<span style={{ color: 'var(--accent)' }}>Mart</span></span>
+          <Link to="/" className="navbar-logo brand-logo-container">
+            <img src="/mobilemart-logo.png" alt="MobileMart Official Logo" className="brand-logo-img" style={{ height: '38px', marginRight: '10px' }} />
+            <span style={{ fontSize: '22px', fontWeight: '700', letterSpacing: '-0.5px', color: '#FFF' }}>Mobile<span style={{ color: 'var(--primary)' }}>Mart</span></span>
           </Link>
 
           {/* Desktop Navigation Links */}
@@ -166,14 +176,19 @@ export const Navbar = () => {
             </Link>
 
             {/* Shopping Cart Trigger */}
-            <Link to="/cart" className="action-btn" title="View Shopping Cart" aria-label="Cart">
+            <button
+              className="action-btn" 
+              title="View Shopping Cart" 
+              aria-label="Cart"
+              onClick={openCartDrawer}
+            >
               <svg className="action-icon-svg" viewBox="0 0 24 24">
                 <circle cx="9" cy="21" r="1"></circle>
                 <circle cx="20" cy="21" r="1"></circle>
                 <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
               </svg>
-              {cartCount > 0 && <span className="action-badge">{cartCount}</span>}
-            </Link>
+              {cartCount > 0 && <span className={`action-badge ${popBadge ? 'badge-pop-animate' : ''}`}>{cartCount}</span>}
+            </button>
 
             {/* Session Controls & user profile dropdown */}
             <div className="desktop-only-controls">
@@ -181,7 +196,7 @@ export const Navbar = () => {
                 /* User profile dropdown placeholder */
                 <div className="nav-dropdown">
                   <span className="user-profile-trigger font-sans">
-                    👤 {user.name.split(' ')[0]} <span className="dropdown-icon" style={{ marginLeft: '4px' }}>▼</span>
+                    👤 {(user?.name || 'User').split(' ')[0]} <span className="dropdown-icon" style={{ marginLeft: '4px' }}>▼</span>
                   </span>
                   <div className="dropdown-menu" style={{ right: 0, left: 'auto', width: '180px' }}>
                     <Link to="/profile" className="dropdown-item">
@@ -284,16 +299,21 @@ export const Navbar = () => {
           <Link to="/wishlist" className="mobile-link">
             <span>Wishlist</span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              ❤️ {wishlistCount > 0 && <span style={{ background: 'var(--accent)', color: '#0f172a', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: '800' }}>{wishlistCount}</span>}
+              ❤️ {wishlistCount > 0 && <span className="mobile-action-badge">{wishlistCount}</span>}
             </span>
           </Link>
 
-          <Link to="/cart" className="mobile-link">
+          <button 
+            type="button"
+            className="mobile-link"
+            style={{ width: '100%', background: 'transparent', border: 'none', borderBottom: '1px solid var(--border)', textAlign: 'left' }}
+            onClick={() => { setMobileMenuOpen(false); openCartDrawer(); }}
+          >
             <span>Shopping Cart</span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              🛒 {cartCount > 0 && <span style={{ background: 'var(--accent)', color: '#0f172a', padding: '2px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: '800' }}>{cartCount}</span>}
+              🛒 {cartCount > 0 && <span className="mobile-action-badge">{cartCount}</span>}
             </span>
-          </Link>
+          </button>
         </div>
 
         {/* Mobile Search input */}
@@ -306,7 +326,7 @@ export const Navbar = () => {
           {user ? (
             <>
               <Link to="/profile" className="user-profile-trigger" style={{ justifyContent: 'center', width: '100%', padding: '12px' }}>
-                👤 {user.name}
+                👤 {user?.name || 'User'}
               </Link>
               {isAdmin() && (
                 <Link to="/admin" className="btn btn-secondary" style={{ width: '100%', padding: '12px' }}>
@@ -334,6 +354,7 @@ export const Navbar = () => {
           )}
         </div>
       </nav>
+      <MiniCart />
     </>
   );
 };

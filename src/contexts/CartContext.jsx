@@ -7,7 +7,11 @@ const CartContext = createContext();
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
   const [wishlistItems, setWishlistItems] = useState([]);
+  const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
   const { user } = useAuth();
+
+  const openCartDrawer = () => setIsCartDrawerOpen(true);
+  const closeCartDrawer = () => setIsCartDrawerOpen(false);
 
   useEffect(() => {
     if (user) {
@@ -149,6 +153,9 @@ export const CartProvider = ({ children }) => {
         wishlistItems,
         toggleWishlist,
         clearWishlist,
+        isCartDrawerOpen,
+        openCartDrawer,
+        closeCartDrawer,
       }}
     >
       {children}

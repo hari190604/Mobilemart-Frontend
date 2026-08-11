@@ -9,14 +9,14 @@
   align-items: center;
   border-bottom: 1px solid var(--border);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: var(--glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(5, 8, 22, 0.7);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
 }
 
 .navbar-header.scrolled {
-  box-shadow: var(--shadow-md);
-  border-bottom-color: rgba(245, 158, 11, 0.15);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  border-bottom-color: rgba(255, 255, 255, 0.05);
 }
 
 /* Nav container */
@@ -282,20 +282,40 @@
 /* Badge counts styling */
 .action-badge {
   position: absolute;
-  top: 0;
-  right: 0;
-  background-color: var(--accent);
+  top: -4px;
+  right: -6px;
+  z-index: 9999;
+  background-color: #ffffff;
   color: #0f172a;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
-  width: 17px;
-  height: 17px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1.5px solid var(--bg-card);
+  border: 1.5px solid #0f172a;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
   animation: badgePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.mobile-action-badge {
+  background-color: #ffffff;
+  color: #0f172a;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #0f172a;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  line-height: 1;
 }
 
 @keyframes badgePop {
