@@ -28,8 +28,13 @@ export const VerifyOtp = () => {
       setLoading(true);
       const res = await verifyOtp(email, otp);
       setSuccess(res.message);
+      const context = searchParams.get('context');
       setTimeout(() => {
-        navigate('/login');
+        if (context === 'registration') {
+          navigate('/');
+        } else {
+          navigate(`/reset-password?identifier=${encodeURIComponent(email)}`);
+        }
       }, 1500);
     } catch (err) {
       setError(err.message || 'Verification failed.');

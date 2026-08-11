@@ -124,18 +124,13 @@ export const Register = () => {
     try {
       setLoading(true);
       await register(formData.email, formData.password, formData.fullName, formData.phoneNumber, formData.confirmPassword);
-      setSuccessAlert('Account created successfully! Redirecting to login page...');
+      setSuccessAlert('Registration successful! Please check your email for the verification OTP.');
       
       // Delay navigation to let the user review confirmation
       setTimeout(() => {
-        navigate('/login');
-      }, 1800);
+        navigate(`/verify-otp?email=${encodeURIComponent(formData.email)}&context=registration`);
+      }, 1500);
     } catch (err) {
-const errorMessage =
-    err?.response?.data?.message ||
-    err?.message ||
-    "Registration failed. Please try again.";
-
   setErrorAlert(errorMessage);    
 } finally {
       setLoading(false);
